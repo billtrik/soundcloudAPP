@@ -11,6 +11,8 @@
 
   snd.hogan = Hogan;
 
+  snd.timeoutVar = null;
+
   snd.nowPlaying = {
     obj: null,
     element: null
@@ -39,17 +41,17 @@
   };
 
   snd.template = snd.hogan.compile('\
-  <div class="song_item clearfix">\
+  <li class="song_item clearfix">\
     <div class="image_div">\
       <img src="{{artwork_url}}" />\
     </div>\
     <div class="details">\
       <h5>{{title}}</h5>\
-      <p class="genre">{{genre}}</p>\
+      <p class="current_time">00:00</p><span>/</span>\
       <p class="duration">{{duration}}</p>\
       <button class="play_me btn-info" data-id="{{id}}">Play</button>\
     </div>\
-  </div>');
+  </li>');
 
   snd.renderSongs = function(data) {
     var $new_item, data_item, _i, _len, _results;
@@ -59,7 +61,7 @@
       data_item.duration = secondsToTime(data_item.duration);
       $new_item = $(snd.template.render(data_item));
       snd.setHandlersFor($new_item);
-      _results.push($("#songs_list").append($new_item));
+      _results.push($("#songs_list ul").append($new_item));
     }
     return _results;
   };
@@ -74,6 +76,17 @@
     element.removeClass("btn-warning");
     element.addClass("btn-info");
     element.html("Play");
+  };
+
+  snd.timeoutfunc = function() {
+    return snd.timeoutVar = setTimeout(function() {
+      var current_time;
+      if (snd.nowPlaying.element) {
+        current_time = secondsToTime(snd.nowPlaying.obj.position);
+        snd.nowPlaying.element.parents("li").find(".current_time").html(current_time);
+        return snd.timeoutfunc();
+      }
+    }, 1000);
   };
 
   snd.setHandlersFor = function(item) {
@@ -95,7 +108,15 @@
         soundObj = SC.stream(my_id);
         snd.nowPlaying.obj = soundObj;
         snd.nowPlaying.element = me;
-        return soundObj.play();
+        return soundObj.play({
+          onplay: function() {
+            return snd.timeoutfunc();
+          },
+          onpause: function() {},
+          onstop: function() {
+            return clearTimeout(snd.timeoutVar);
+          }
+        });
       });
     });
   };

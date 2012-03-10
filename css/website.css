@@ -14,12 +14,16 @@
 #loggedin {
   display: none; }
 
+#songs_list ul {
+  margin: 0px;
+  list-style: none; }
+
 .song_item {
   background-color: #444;
   color: #eee;
   border: 1px solid #888;
   border-radius: 4px;
-  margin-bottom: 20px;
+  margin: 10px 0;
   padding: 10px; }
   .song_item .image_div {
     width: 100px;
@@ -31,5 +35,13 @@
     margin-right: 20px; }
   .song_item .details h5 {
     color: #eee; }
-  .song_item .details .play_me {
-    display: inline-block; }
+  .song_item .details p, .song_item .details span {
+    display: inline-block;
+    padding: 0;
+    margin: 0;
+    color: #eee;
+    margin: 10px 0; }
+  .song_item .details span {
+    padding-left: 4px; }
+  .song_item .details button {
+    display: block; }

@@ -3,7 +3,7 @@ snd.client_id    = '120a55b8b9d07b69a72faa9f4874f36d'
 snd.url          = 'http://api.soundcloud.com/'
 snd.redirect_uri = "http://soundcloud.billtrik.gr/callback.html"
 snd.hogan        = Hogan
-
+snd.timeoutVar   = null
 snd.nowPlaying   =
   obj     : null
   element : null
@@ -32,29 +32,26 @@ snd.getTracks = ->
   SC.get "/tracks", {limit: 10}, (tracks)->
     snd.renderSongs tracks
     
-
-
 snd.template = snd.hogan.compile '
-  <div class="song_item clearfix">
+  <li class="song_item clearfix">
     <div class="image_div">
       <img src="{{artwork_url}}" />
     </div>
     <div class="details">
       <h5>{{title}}</h5>
-      <p class="genre">{{genre}}</p>
+      <p class="current_time">00:00</p><span>/</span>
       <p class="duration">{{duration}}</p>
       <button class="play_me btn-info" data-id="{{id}}">Play</button>
     </div>
-  </div>'
+  </li>'
 
 snd.renderSongs = (data)->
   for data_item in data
     data_item.duration = secondsToTime data_item.duration
     $new_item = $(snd.template.render data_item)
     snd.setHandlersFor $new_item
-    $("#songs_list").append $new_item
+    $("#songs_list ul").append $new_item
   
-
 snd.changeButtonToPause = (element)->
   element.removeClass("btn-info")
   element.addClass("btn-warning")
@@ -66,6 +63,15 @@ snd.changeButtonToPlay = (element)->
   element.addClass("btn-info")
   element.html("Play")
   return
+
+
+snd.timeoutfunc = ->
+  snd.timeoutVar = setTimeout ->
+    if snd.nowPlaying.element
+      current_time = secondsToTime snd.nowPlaying.obj.position
+      snd.nowPlaying.element.parents("li").find(".current_time").html current_time
+      snd.timeoutfunc()
+  , 1000
 
 snd.setHandlersFor = (item)->
   item.find(".play_me").on 'click', ->
@@ -83,8 +89,18 @@ snd.setHandlersFor = (item)->
       soundObj               = SC.stream(my_id)
       snd.nowPlaying.obj     = soundObj
       snd.nowPlaying.element = me
-      soundObj.play()
+      soundObj.play({
+        onplay: ->
+          # console.log "onplay"
+          snd.timeoutfunc()
+        onpause:->
+          # console.log "onplay"
+        onstop:->
+          # console.log "onstop"
+          clearTimeout snd.timeoutVar
+      })
     return
+
   return
   
 $.domReady ->
