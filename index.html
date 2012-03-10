@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+	<title></title>
+	<meta name="description" content="SoundCloud test">
+	<meta name="author" content="Bill Trikalinos">
+
+	<meta name="viewport" content="width=device-width">
+
+	<link rel="stylesheet" href="css/bootstrap.css">
+	<style>
+	body {
+	  padding-top: 60px;
+    padding-bottom: 40px;
+  }
+  </style>
+  <link rel="stylesheet" href="css/bootstrap-responsive.min.css">
+  <link rel="stylesheet" href="css/website.css">
+</head>
+<body>
+  <div class="well">
+    <div id="notloggedin">
+      <a href="#" class="big button" id="connect">
+        <img src="http://connect.soundcloud.com/2/btn-connect-s.png" alt="">
+      </a>
+    </div>
+    <div id="loggedin">
+      <p>
+      Logged in as: <span id="username"></span>
+      </p>
+      <a href="#" class="big button" id="connect">
+        <img src="http://connect.soundcloud.com/2/btn-disconnect-s.png" alt="">
+      </a>
+    </div>
+    <div class="logged-in" style="display: one;">
+      Your profile description:
+      <textarea id="description" class="fullWidth"></textarea>
+      <button id="update" class="big button">Update your profile description</button>
+    </div>
+  </div>
+    
+  
+
+  <script src="js/ender.min.js"></script>
+  <script src="http://connect.soundcloud.com/sdk.js"></script>
+  <script src="js/website.js"></script>
+</body>
+</html>
