@@ -1,5 +1,35 @@
+.clearfix:before, .clearfix:after {
+  content: "";
+  display: table; }
+
+.clearfix:after {
+  clear: both; }
+
+.clearfix {
+  *zoom: 1; }
+
 #notloggedin {
   display: block; }
 
 #loggedin {
   display: none; }
+
+.song_item {
+  background-color: #444;
+  color: #eee;
+  border: 1px solid #888;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  padding: 10px; }
+  .song_item .image_div {
+    width: 100px;
+    height: 100px;
+    float: left;
+    background-color: black;
+    border: 1px solid white;
+    border-radius: 2px;
+    margin-right: 20px; }
+  .song_item .details h5 {
+    color: #eee; }
+  .song_item .details .play_me {
+    display: inline-block; }

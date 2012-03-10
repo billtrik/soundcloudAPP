@@ -1,37 +1,119 @@
 snd              = window.SOUNDTEST = window.SOUNDTEST || {}
 snd.client_id    = '120a55b8b9d07b69a72faa9f4874f36d'
 snd.url          = 'http://api.soundcloud.com/'
-snd.redirect_uri = "http://dl.dropbox.com/u/215509/sound/callback.html"
+snd.redirect_uri = "http://soundcloud.billtrik.gr/callback.html"
+snd.hogan        = Hogan
 
-$.domReady ->
+snd.nowPlaying   =
+  obj     : null
+  element : null
+
+snd.getUserDetails = ->
+  SC.get "/me", (me) ->
+    $("#username").text(me.username)
+    $("#description").val(me.description)
+  # if SC.isConnected()
+  #   snd.getUserDetails()
+  #   $("#notloggedin").hide()
+  #   $("#loggedin").show('block')
+
+
+  # $("#connect").on "click", ->
+  #   SC.connect ->
+  #     getUserDetails()
+
+snd.initialize_soundcloud = ->
   SC.initialize
     client_id: snd.client_id
     redirect_uri: snd.redirect_uri
-
-  getUserDetails = ->
-    SC.get "/me", (me) ->
-      $("#username").text(me.username)
-      $("#description").val(me.description)
+  return
       
-  if SC.isConnected()
-    getUserDetails()
-    $("#notloggedin").hide()
-    $("#loggedin").show('block')
+snd.getTracks = ->
+  SC.get "/tracks", {limit: 10}, (tracks)->
+    snd.renderSongs tracks
+    
 
 
-  $("#connect").on "click", ->
-    SC.connect ->
-      getUserDetails()
+snd.template = snd.hogan.compile '
+  <div class="song_item clearfix">
+    <div class="image_div">
+      <img src="{{artwork_url}}" />
+    </div>
+    <div class="details">
+      <h5>{{title}}</h5>
+      <p class="genre">{{genre}}</p>
+      <p class="duration">{{duration}}</p>
+      <button class="play_me btn-info" data-id="{{id}}">Play</button>
+    </div>
+  </div>'
+
+snd.renderSongs = (data)->
+  for data_item in data
+    data_item.duration = secondsToTime data_item.duration
+    $new_item = $(snd.template.render data_item)
+    snd.setHandlersFor $new_item
+    $("#songs_list").append $new_item
+  
+
+snd.changeButtonToPause = (element)->
+  element.removeClass("btn-info")
+  element.addClass("btn-warning")
+  element.html("Pause")
+  return
+
+snd.changeButtonToPlay = (element)->
+  element.removeClass("btn-warning")
+  element.addClass("btn-info")
+  element.html("Play")
+  return
+
+snd.setHandlersFor = (item)->
+  item.find(".play_me").on 'click', ->
+    if snd.nowPlaying.element
+      snd.changeButtonToPlay snd.nowPlaying.element
+      snd.nowPlaying.obj.stop()
+      if snd.nowPlaying.element[0] is this
+        snd.nowPlaying.element = null
+        return true
+
+    me = $(this)
+    snd.changeButtonToPause me
+    my_id = parseInt me.attr("data-id"), 10
+    SC.whenStreamingReady ->
+      soundObj               = SC.stream(my_id)
+      snd.nowPlaying.obj     = soundObj
+      snd.nowPlaying.element = me
+      soundObj.play()
+    return
+  return
+  
+$.domReady ->
+  snd.initialize_soundcloud()
+  snd.getTracks()
 
 
-  # $("#update").on "click", ->
-  #   SC.put("/me", {user: {description: $("#description").val()}}, (response, error)->
-  #     if(error){
-  #       alert("Some error occured: " + error.message);
-  #     }else{
-  #       alert("Profile description updated!");
-  #     }
-  #   )
+
+
+
+secondsToTime = (secs)->
+  secs = secs / 1000
+  hours = Math.floor(secs / (60 * 60))
+  hours = "0" + hours if hours < 10
+
+  divisor_for_minutes = secs % (60 * 60)
+  minutes = Math.floor(divisor_for_minutes / 60)
+  minutes = "0" + minutes if minutes < 10
+
+  divisor_for_seconds = divisor_for_minutes % 60
+  seconds = Math.ceil(divisor_for_seconds)
+  seconds = "0" + seconds if seconds < 10
+
+  return minutes + ":" + seconds
+
+
+
+
+
 
   # $.ajax
   #   url: snd.url + 'tracks.json' + '?client_id=' + snd.client_id
