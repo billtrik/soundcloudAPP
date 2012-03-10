@@ -35,32 +35,39 @@ snd.getTracks = ->
 snd.template = snd.hogan.compile '
   <li class="song_item clearfix">
     <div class="image_div">
-      <img src="{{artwork_url}}" />
+      {{#artwork_url?}}
+        <img src="{{artwork_url}}" />
+      {{/artwork_url?}}
     </div>
     <div class="details">
       <h5>{{title}}</h5>
       <p class="current_time">00:00</p><span>/</span>
       <p class="duration">{{duration}}</p>
-      <button class="play_me btn-info" data-id="{{id}}">Play</button>
+      <div class="buttons">
+        <button class="play_me btn btn-success" data-id="{{id}}">Play</button>
+        <button class="playlist_me btn btn-inverse" data-id="{{id}}">PlaylistMe</button>
+      </div>
     </div>
   </li>'
 
 snd.renderSongs = (data)->
   for data_item in data
     data_item.duration = secondsToTime data_item.duration
+    data_item.artwork_url = data_item.artwork_url || "#"
     $new_item = $(snd.template.render data_item)
     snd.setHandlersFor $new_item
     $("#songs_list ul").append $new_item
   
-snd.changeButtonToPause = (element)->
-  element.removeClass("btn-info")
-  element.addClass("btn-warning")
-  element.html("Pause")
+snd.changeButtonToStop = (element)->
+  element.removeClass("btn-success")
+  element.addClass("btn-danger")
+  element.html("Stop")
   return
 
 snd.changeButtonToPlay = (element)->
-  element.removeClass("btn-warning")
-  element.addClass("btn-info")
+  element.parents("li").find(".current_time").html "00:00"
+  element.removeClass("btn-danger")
+  element.addClass("btn-success")
   element.html("Play")
   return
 
@@ -82,14 +89,14 @@ snd.setHandlersFor = (item)->
         snd.nowPlaying.element = null
         return true
 
-    me = $(this)
-    snd.changeButtonToPause me
+    me    = $(this)
+    snd.changeButtonToStop me
     my_id = parseInt me.attr("data-id"), 10
     SC.whenStreamingReady ->
       soundObj               = SC.stream(my_id)
       snd.nowPlaying.obj     = soundObj
       snd.nowPlaying.element = me
-      soundObj.play({
+      soundObj.play
         onplay: ->
           # console.log "onplay"
           snd.timeoutfunc()
@@ -98,7 +105,11 @@ snd.setHandlersFor = (item)->
         onstop:->
           # console.log "onstop"
           clearTimeout snd.timeoutVar
-      })
+          snd.changeButtonToPlay snd.nowPlaying.element
+        onfinish: ->
+          snd.changeButtonToPlay snd.nowPlaying.element
+          snd.nowPlaying.element.parents("li").find(".current_time").html "00:00"
+          snd.nowPlaying.element = null
     return
 
   return

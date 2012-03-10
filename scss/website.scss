@@ -16,13 +16,63 @@
     margin:0px;
     list-style: none;
   }
+  li{
+    float:left;
+  }
 }
+
+@media (max-width: 770px) {
+  #songs_list {
+    ul{
+      li{
+        display:block;
+        float:none;
+        margin: 10px 0;
+      }
+    }
+  }
+}
+@media (min-width: 771px) and (max-width: 980px) {
+  #songs_list {
+    ul{
+      margin-right: -15px;
+      li{
+        width:45%;
+        margin: 10px 12px 10px 0;
+      }
+    }
+  }
+}
+@media (min-width: 981px) and (max-width: 1200px) {
+  #songs_list {
+    ul{
+      margin-right: -15px;
+      li{
+        width:45%;
+        margin: 10px 24px 10px 0;
+      }
+    }
+  }
+}
+@media (min-width: 1201px) {
+  #songs_list {
+    ul{
+      margin-right: -20px;
+      li{
+        width:30%;
+        margin: 10px 14px 10px 0;
+      }
+    }
+  }
+}
+
+
 .song_item{
   background-color: #444;
   color: #eee;
   border: 1px solid #888;
   border-radius: 4px;
-  margin:10px 0;
+  // margin:10px 0;
   padding:10px;
   .image_div{
     width: 100px;
@@ -50,14 +100,20 @@
     span{
       padding-left:4px;
     }
-
+    .play_me{
+      width: 60px;
+    }
     button{
-      display:block;
+      display:inline-block;
     }
 
     // .play_me{
     //   display:inline-block;
 
     // }
+  }
+  .buttons{
+    clear:both;
+    padding-top: 10px;
   }
 }

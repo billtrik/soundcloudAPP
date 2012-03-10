@@ -43,13 +43,18 @@
   snd.template = snd.hogan.compile('\
   <li class="song_item clearfix">\
     <div class="image_div">\
-      <img src="{{artwork_url}}" />\
+      {{#artwork_url?}}\
+        <img src="{{artwork_url}}" />\
+      {{/artwork_url?}}\
     </div>\
     <div class="details">\
       <h5>{{title}}</h5>\
       <p class="current_time">00:00</p><span>/</span>\
       <p class="duration">{{duration}}</p>\
-      <button class="play_me btn-info" data-id="{{id}}">Play</button>\
+      <div class="buttons">\
+        <button class="play_me btn btn-success" data-id="{{id}}">Play</button>\
+        <button class="playlist_me btn btn-inverse" data-id="{{id}}">PlaylistMe</button>\
+      </div>\
     </div>\
   </li>');
 
@@ -59,6 +64,7 @@
     for (_i = 0, _len = data.length; _i < _len; _i++) {
       data_item = data[_i];
       data_item.duration = secondsToTime(data_item.duration);
+      data_item.artwork_url = data_item.artwork_url || "#";
       $new_item = $(snd.template.render(data_item));
       snd.setHandlersFor($new_item);
       _results.push($("#songs_list ul").append($new_item));
@@ -66,15 +72,16 @@
     return _results;
   };
 
-  snd.changeButtonToPause = function(element) {
-    element.removeClass("btn-info");
-    element.addClass("btn-warning");
-    element.html("Pause");
+  snd.changeButtonToStop = function(element) {
+    element.removeClass("btn-success");
+    element.addClass("btn-danger");
+    element.html("Stop");
   };
 
   snd.changeButtonToPlay = function(element) {
-    element.removeClass("btn-warning");
-    element.addClass("btn-info");
+    element.parents("li").find(".current_time").html("00:00");
+    element.removeClass("btn-danger");
+    element.addClass("btn-success");
     element.html("Play");
   };
 
@@ -101,7 +108,7 @@
         }
       }
       me = $(this);
-      snd.changeButtonToPause(me);
+      snd.changeButtonToStop(me);
       my_id = parseInt(me.attr("data-id"), 10);
       SC.whenStreamingReady(function() {
         var soundObj;
@@ -114,7 +121,13 @@
           },
           onpause: function() {},
           onstop: function() {
-            return clearTimeout(snd.timeoutVar);
+            clearTimeout(snd.timeoutVar);
+            return snd.changeButtonToPlay(snd.nowPlaying.element);
+          },
+          onfinish: function() {
+            snd.changeButtonToPlay(snd.nowPlaying.element);
+            snd.nowPlaying.element.parents("li").find(".current_time").html("00:00");
+            return snd.nowPlaying.element = null;
           }
         });
       });
