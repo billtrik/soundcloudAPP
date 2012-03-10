@@ -58,7 +58,7 @@
   </li>');
 
   snd.playlist_item_template = snd.hogan.compile('\
-  <li class="playlist_item" data-id="{{playlist_id}}">\
+  <li class="playlist_item" data-id="{{id}}">\
     <div class="title_cont">\
       <p class="title">{{title}}</p>\
     </div>\
@@ -198,16 +198,25 @@
     var create_button;
     create_button = element.find(".create");
     return create_button.on('click', function(e) {
-      var my_form, my_playlist;
+      var $new_item, my_desc, my_id, my_li, my_title, new_playlist, playlist_data;
       e.stop();
-      console.log("got click");
-      my_form = $(this).parents("form");
-      my_playlist = snd.createPlaylist();
-      console.log(my_playlist);
-      my_playlist.save({
-        title: my_form.find(".title").val(),
-        description: my_form.find(".desc").val()
+      my_li = $(this).parents("li");
+      my_title = my_li.find(".title").val();
+      my_desc = my_li.find(".desc").val();
+      new_playlist = snd.createPlaylist();
+      my_id = new_playlist.save({
+        title: my_title,
+        description: my_desc
       });
+      my_li.remove();
+      playlist_data = {
+        id: my_id,
+        title: my_title,
+        description: my_desc
+      };
+      $new_item = $(snd.playlist_item_template.render(playlist_data));
+      snd.handlersForNewPlaylist($new_item);
+      $("#playlists_list ol").prepend($new_item);
       return false;
     });
   };

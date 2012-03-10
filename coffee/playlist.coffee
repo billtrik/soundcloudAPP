@@ -29,8 +29,6 @@
         return result
 
       save: (params)->
-        console.log "got save"
-        console.log params
         playlists = Playlist.get_all_playlists @db_prefix
         playlists = [] if playlists is false
         length = playlists.length + 1

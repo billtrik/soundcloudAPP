@@ -45,7 +45,7 @@ snd.playlist_new_template = snd.hogan.compile '
   </li>'
 
 snd.playlist_item_template = snd.hogan.compile '
-  <li class="playlist_item" data-id="{{playlist_id}}">
+  <li class="playlist_item" data-id="{{id}}">
     <div class="title_cont">
       <p class="title">{{title}}</p>
     </div>
@@ -169,13 +169,26 @@ snd.handlersForNewPlaylist = (element)->
   create_button = element.find(".create")
   create_button.on 'click', (e)->
     e.stop()
-    console.log "got click"
-    my_form = $(this).parents("form")
-    my_playlist = snd.createPlaylist()
-    console.log my_playlist
-    my_playlist.save 
-      title       : my_form.find(".title").val()
-      description : my_form.find(".desc").val()
+    
+    my_li = $(this).parents("li")
+    
+    my_title = my_li.find(".title").val()
+    my_desc = my_li.find(".desc").val()
+
+    new_playlist = snd.createPlaylist()
+    my_id = new_playlist.save 
+      title       : my_title
+      description : my_desc
+    my_li.remove()
+    
+    playlist_data = 
+      id          : my_id
+      title       : my_title
+      description : my_desc
+
+    $new_item = $(snd.playlist_item_template.render playlist_data)
+    snd.handlersForNewPlaylist $new_item
+    $("#playlists_list ol").prepend $new_item
     return false;
 
 

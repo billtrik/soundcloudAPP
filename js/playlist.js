@@ -29,8 +29,6 @@
         },
         save: function(params) {
           var length, playlists;
-          console.log("got save");
-          console.log(params);
           playlists = Playlist.get_all_playlists(this.db_prefix);
           if (playlists === false) playlists = [];
           length = playlists.length + 1;
