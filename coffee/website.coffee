@@ -4,9 +4,30 @@ snd.url          = 'http://api.soundcloud.com/'
 snd.redirect_uri = "http://soundcloud.billtrik.gr/callback.html"
 snd.hogan        = Hogan
 snd.timeoutVar   = null
+snd.db           = snd.db || null
+snd.db_prefix    = "SND_app_"
+snd.playlists    = []
 snd.nowPlaying   =
   obj     : null
   element : null
+
+snd.song_item_template = snd.hogan.compile '
+  <li class="song_item clearfix">
+    <div class="image_div">
+      {{#artwork_url?}}
+        <img src="{{artwork_url}}" />
+      {{/artwork_url?}}
+    </div>
+    <div class="details">
+      <h5>{{title}}</h5>
+      <p class="current_time">00:00</p><span>/</span>
+      <p class="duration">{{duration}}</p>
+      <div class="buttons">
+        <button class="play_me btn btn-success" data-id="{{id}}">Play</button>
+        <button class="playlist_me btn btn-inverse" data-id="{{id}}">PlaylistMe</button>
+      </div>
+    </div>
+  </li>'
 
 snd.getUserDetails = ->
   SC.get "/me", (me) ->
@@ -32,29 +53,11 @@ snd.getTracks = ->
   SC.get "/tracks", {limit: 10}, (tracks)->
     snd.renderSongs tracks
     
-snd.template = snd.hogan.compile '
-  <li class="song_item clearfix">
-    <div class="image_div">
-      {{#artwork_url?}}
-        <img src="{{artwork_url}}" />
-      {{/artwork_url?}}
-    </div>
-    <div class="details">
-      <h5>{{title}}</h5>
-      <p class="current_time">00:00</p><span>/</span>
-      <p class="duration">{{duration}}</p>
-      <div class="buttons">
-        <button class="play_me btn btn-success" data-id="{{id}}">Play</button>
-        <button class="playlist_me btn btn-inverse" data-id="{{id}}">PlaylistMe</button>
-      </div>
-    </div>
-  </li>'
-
 snd.renderSongs = (data)->
   for data_item in data
     data_item.duration = secondsToTime data_item.duration
     data_item.artwork_url = data_item.artwork_url || "#"
-    $new_item = $(snd.template.render data_item)
+    $new_item = $(snd.song_item_template.render data_item)
     snd.setHandlersFor $new_item
     $("#songs_list ul").append $new_item
   
@@ -70,7 +73,6 @@ snd.changeButtonToPlay = (element)->
   element.addClass("btn-success")
   element.html("Play")
   return
-
 
 snd.timeoutfunc = ->
   snd.timeoutVar = setTimeout ->
@@ -113,10 +115,27 @@ snd.setHandlersFor = (item)->
     return
 
   return
-  
+
+snd.getPlaylists = ->
+ if snd.db
+  snd.playlists = snd.db.get snd.db_prefix + "playlists" || []
+  snd.playlists = [] if snd.playlists is false
+
+  console.log snd.playlists
+  return
+
+snd.createPlaylist = ->
+
+  return
+
+snd.editPlaylist = ->
+
+  return
+
 $.domReady ->
   snd.initialize_soundcloud()
   snd.getTracks()
+  snd.getPlaylists()
 
 
 

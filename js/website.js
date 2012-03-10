@@ -13,10 +13,34 @@
 
   snd.timeoutVar = null;
 
+  snd.db = snd.db || null;
+
+  snd.db_prefix = "SND_app_";
+
+  snd.playlists = [];
+
   snd.nowPlaying = {
     obj: null,
     element: null
   };
+
+  snd.song_item_template = snd.hogan.compile('\
+  <li class="song_item clearfix">\
+    <div class="image_div">\
+      {{#artwork_url?}}\
+        <img src="{{artwork_url}}" />\
+      {{/artwork_url?}}\
+    </div>\
+    <div class="details">\
+      <h5>{{title}}</h5>\
+      <p class="current_time">00:00</p><span>/</span>\
+      <p class="duration">{{duration}}</p>\
+      <div class="buttons">\
+        <button class="play_me btn btn-success" data-id="{{id}}">Play</button>\
+        <button class="playlist_me btn btn-inverse" data-id="{{id}}">PlaylistMe</button>\
+      </div>\
+    </div>\
+  </li>');
 
   snd.getUserDetails = function() {
     return SC.get("/me", function(me) {
@@ -40,24 +64,6 @@
     });
   };
 
-  snd.template = snd.hogan.compile('\
-  <li class="song_item clearfix">\
-    <div class="image_div">\
-      {{#artwork_url?}}\
-        <img src="{{artwork_url}}" />\
-      {{/artwork_url?}}\
-    </div>\
-    <div class="details">\
-      <h5>{{title}}</h5>\
-      <p class="current_time">00:00</p><span>/</span>\
-      <p class="duration">{{duration}}</p>\
-      <div class="buttons">\
-        <button class="play_me btn btn-success" data-id="{{id}}">Play</button>\
-        <button class="playlist_me btn btn-inverse" data-id="{{id}}">PlaylistMe</button>\
-      </div>\
-    </div>\
-  </li>');
-
   snd.renderSongs = function(data) {
     var $new_item, data_item, _i, _len, _results;
     _results = [];
@@ -65,7 +71,7 @@
       data_item = data[_i];
       data_item.duration = secondsToTime(data_item.duration);
       data_item.artwork_url = data_item.artwork_url || "#";
-      $new_item = $(snd.template.render(data_item));
+      $new_item = $(snd.song_item_template.render(data_item));
       snd.setHandlersFor($new_item);
       _results.push($("#songs_list ul").append($new_item));
     }
@@ -134,9 +140,22 @@
     });
   };
 
+  snd.getPlaylists = function() {
+    if (snd.db) {
+      snd.playlists = snd.db.get(snd.db_prefix + "playlists" || []);
+      if (snd.playlists === false) snd.playlists = [];
+      console.log(snd.playlists);
+    }
+  };
+
+  snd.createPlaylist = function() {};
+
+  snd.editPlaylist = function() {};
+
   $.domReady(function() {
     snd.initialize_soundcloud();
-    return snd.getTracks();
+    snd.getTracks();
+    return snd.getPlaylists();
   });
 
   secondsToTime = function(secs) {
