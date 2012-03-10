@@ -14,9 +14,7 @@ snd.nowPlaying   =
 snd.song_item_template = snd.hogan.compile '
   <li class="song_item clearfix">
     <div class="image_div">
-      {{#artwork_url?}}
-        <img src="{{artwork_url}}" />
-      {{/artwork_url?}}
+      <img src="{{artwork_url}}" />
     </div>
     <div class="details">
       <h5>{{title}}</h5>
@@ -80,13 +78,13 @@ snd.initialize_soundcloud = ->
   return
       
 snd.getTracks = ->
-  SC.get "/tracks", {limit: 10}, (tracks)->
+  SC.get "/tracks", {limit: 12}, (tracks)->
     snd.renderSongs tracks
     
 snd.renderSongs = (data)->
   for data_item in data
     data_item.duration = secondsToTime data_item.duration
-    data_item.artwork_url = data_item.artwork_url || "#"
+    # data_item.artwork_url = data_item.artwork_url || "#"
     $new_item = $(snd.song_item_template.render data_item)
     snd.setHandlersFor $new_item
     $("#songs_list ul").append $new_item

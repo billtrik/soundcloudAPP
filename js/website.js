@@ -27,9 +27,7 @@
   snd.song_item_template = snd.hogan.compile('\
   <li class="song_item clearfix">\
     <div class="image_div">\
-      {{#artwork_url?}}\
-        <img src="{{artwork_url}}" />\
-      {{/artwork_url?}}\
+      <img src="{{artwork_url}}" />\
     </div>\
     <div class="details">\
       <h5>{{title}}</h5>\
@@ -88,7 +86,7 @@
 
   snd.getTracks = function() {
     return SC.get("/tracks", {
-      limit: 10
+      limit: 12
     }, function(tracks) {
       return snd.renderSongs(tracks);
     });
@@ -100,7 +98,6 @@
     for (_i = 0, _len = data.length; _i < _len; _i++) {
       data_item = data[_i];
       data_item.duration = secondsToTime(data_item.duration);
-      data_item.artwork_url = data_item.artwork_url || "#";
       $new_item = $(snd.song_item_template.render(data_item));
       snd.setHandlersFor($new_item);
       _results.push($("#songs_list ul").append($new_item));
