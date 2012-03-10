@@ -29,6 +29,36 @@ snd.song_item_template = snd.hogan.compile '
     </div>
   </li>'
 
+snd.playlist_new_template = snd.hogan.compile '
+  <li class="playlist_item" data-id="{{playlist_id}}">
+    <form class="new_playlist">
+      <div class="title_cont">
+        <input class="title" name="title" placeholder="Insert Title" value="{{title}}">
+      </div>
+      <div class="desc_cont">
+        <textarea class="desc" name="description" placeholder="Insert Description">{{description}}</textarea>
+      </div>
+      <div class="buttons">
+        <button class="btn btn-success create" type="submit">Create It</button>
+      </div>
+    </form>
+  </li>'
+
+snd.playlist_item_template = snd.hogan.compile '
+  <li class="playlist_item" data-id="{{playlist_id}}">
+    <div class="title_cont">
+      <p class="title">{{title}}</p>
+    </div>
+    <div class="desc_cont">
+      <p class="desc">{{description}}</p>
+    </div>
+    
+    <div class="buttons">
+      <button class="btn btn-info edit" type="submit">Edit It</button>
+      <button class="btn btn-danger delete" type="submit">Delete It</button>
+    </div>
+  </li>'
+
 snd.getUserDetails = ->
   SC.get "/me", (me) ->
     $("#username").text(me.username)
@@ -120,19 +150,58 @@ snd.getPlaylists = ->
  if snd.db
   snd.playlists = snd.db.get snd.db_prefix + "playlists" || []
   snd.playlists = [] if snd.playlists is false
-
-  console.log snd.playlists
+  for index, playlist of snd.playlists
+    playlist.id = index
+    $new_item = $(snd.playlist_item_template.render playlist)
+    snd.handlersForNewPlaylist $new_item
+    $("#playlists_list ol").prepend $new_item
   return
 
 snd.createPlaylist = ->
-
-  return
+  new snd.Playlist
+    db_prefix: snd.db_prefix
 
 snd.editPlaylist = ->
 
   return
 
+snd.handlersForNewPlaylist = (element)->
+  create_button = element.find(".create")
+  create_button.on 'click', (e)->
+    e.stop()
+    console.log "got click"
+    my_form = $(this).parents("form")
+    my_playlist = snd.createPlaylist()
+    console.log my_playlist
+    my_playlist.save 
+      title       : my_form.find(".title").val()
+      description : my_form.find(".desc").val()
+    return false;
+
+
 $.domReady ->
+  $(".navbar .btn-navbar").on 'click',->
+    $(".navbar").toggleClass("active")
+
+  $(".navbar .nav li a").on 'click', (e)->
+    e.stop();
+
+    my_target = $( "#" + $(this).attr("data-target") )
+
+    $(".navbar .nav li.active").removeClass("active")
+    $(this).parent().addClass("active")
+
+    $(".content_div.active").removeClass("active")
+    my_target.addClass("active")
+
+    $(".navbar").removeClass("active")
+    return false
+
+  $("#create_playlist_button").on 'click',->
+    $new_item = $(snd.playlist_new_template.render {})
+    snd.handlersForNewPlaylist $new_item
+    $("#playlists_list ol").prepend $new_item
+
   snd.initialize_soundcloud()
   snd.getTracks()
   snd.getPlaylists()

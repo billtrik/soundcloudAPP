@@ -2,14 +2,25 @@
 .clearfix:after { clear: both; }
 .clearfix { *zoom: 1; }
 
-#notloggedin{
-	display:block;
+.content_div{
+  display:none;
+  &.active{
+    display:block;
+  }
 }
 
-#loggedin{
-	display:none;
+.navbar .brand{
+  padding: 9px 10px 0 20px;
 }
 
+#playlists_list{
+  position:relative;
+  #create_playlist_button{
+    position:absolute;
+    top:24px;
+    right:16px;
+  }
+}
 
 #songs_list{
   ul{
@@ -21,6 +32,39 @@
   }
 }
 
+@media (max-width: 980px){
+  .navbar{
+
+    .brand{
+      float: none;
+      margin:0px;
+      padding: 0 0 0 20px;//10px 10px 10px 20px;
+      line-height:40px;
+      display:block;
+    }
+    .nav{
+      display:none;
+    }
+    .btn-navbar{
+      display:block;
+      position:absolute;
+      top:5px;
+      right:5px;
+    }
+    &.active{
+      .nav{
+        display:block;
+      }
+    }
+  }
+}
+@media (min-width: 981px){
+  .navbar{
+    .btn-navbar{
+      display:none;
+    }
+  }
+}
 @media (max-width: 770px) {
   #songs_list {
     ul{
@@ -117,3 +161,4 @@
     padding-top: 10px;
   }
 }
+

@@ -20,20 +20,46 @@
   <link rel="stylesheet" href="css/bootstrap-responsive.min.css">
   <link rel="stylesheet" href="css/website.css">
 </head>
+
 <body>
+  <div class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+      <div class="container">
+        <p class="brand" >SoundCloudAPP</p>
+        <ul class="nav">
+          <li class="">
+            <a id="browse_music_button" data-target="songs_list" href="#">Browse Music</a>
+          </li>
+          <li class="active">
+            <a id="playlist_button" data-target="playlists_list" href="#">Playlists</a>
+          </li>
+        </ul>
+        <a class="btn btn-navbar">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </a>
+      </div>
+    </div>
+  </div>
+
   <div class="container">
     <div class="row">
       <div class="span12">
         
-        <div id="playlists_list" class="well">
-          <h2>Playlists</h2>
-        </div>
-        <div id="songs_list" class="well">
-          <h2>Music</h2>
+
+        <div id="songs_list" class="content_div  well">
+          <h2>Browse Music</h2>
           <ul class="clearfix">
           </ul>
         </div>
 
+        <div id="playlists_list" class="content_div active well">
+          <h2>Playlists</h2>
+          <button id="create_playlist_button" class="btn btn-success">New Playlist</button>
+          <ol class="clearfix">
+          </ol>
+        </div>
 
 
       </div>
@@ -64,6 +90,7 @@
         -->
   <script src="js/ender.min.js"></script>
   <script src="js/storage.js"></script>
+  <script src="js/playlist.js"></script>
   <script src="http://connect.soundcloud.com/sdk.js"></script>
   <script src="http://twitter.github.com/hogan.js/builds/1.0.5/hogan-1.0.5.js"></script>
   <script src="js/website.js"></script>

@@ -8,11 +8,20 @@
 .clearfix {
   *zoom: 1; }
 
-#notloggedin {
-  display: block; }
-
-#loggedin {
+.content_div {
   display: none; }
+  .content_div.active {
+    display: block; }
+
+.navbar .brand {
+  padding: 9px 10px 0 20px; }
+
+#playlists_list {
+  position: relative; }
+  #playlists_list #create_playlist_button {
+    position: absolute;
+    top: 24px;
+    right: 16px; }
 
 #songs_list ul {
   margin: 0px;
@@ -20,6 +29,25 @@
 #songs_list li {
   float: left; }
 
+@media (max-width: 980px) {
+  .navbar .brand {
+    float: none;
+    margin: 0px;
+    padding: 0 0 0 20px;
+    line-height: 40px;
+    display: block; }
+  .navbar .nav {
+    display: none; }
+  .navbar .btn-navbar {
+    display: block;
+    position: absolute;
+    top: 5px;
+    right: 5px; }
+  .navbar.active .nav {
+    display: block; } }
+@media (min-width: 981px) {
+  .navbar .btn-navbar {
+    display: none; } }
 @media (max-width: 770px) {
   #songs_list ul li {
     display: block;

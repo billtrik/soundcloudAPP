@@ -42,6 +42,36 @@
     </div>\
   </li>');
 
+  snd.playlist_new_template = snd.hogan.compile('\
+  <li class="playlist_item" data-id="{{playlist_id}}">\
+    <form class="new_playlist">\
+      <div class="title_cont">\
+        <input class="title" name="title" placeholder="Insert Title" value="{{title}}">\
+      </div>\
+      <div class="desc_cont">\
+        <textarea class="desc" name="description" placeholder="Insert Description">{{description}}</textarea>\
+      </div>\
+      <div class="buttons">\
+        <button class="btn btn-success create" type="submit">Create It</button>\
+      </div>\
+    </form>\
+  </li>');
+
+  snd.playlist_item_template = snd.hogan.compile('\
+  <li class="playlist_item" data-id="{{playlist_id}}">\
+    <div class="title_cont">\
+      <p class="title">{{title}}</p>\
+    </div>\
+    <div class="desc_cont">\
+      <p class="desc">{{description}}</p>\
+    </div>\
+    \
+    <div class="buttons">\
+      <button class="btn btn-info edit" type="submit">Edit It</button>\
+      <button class="btn btn-danger delete" type="submit">Delete It</button>\
+    </div>\
+  </li>');
+
   snd.getUserDetails = function() {
     return SC.get("/me", function(me) {
       $("#username").text(me.username);
@@ -141,18 +171,68 @@
   };
 
   snd.getPlaylists = function() {
+    var $new_item, index, playlist, _ref;
     if (snd.db) {
       snd.playlists = snd.db.get(snd.db_prefix + "playlists" || []);
       if (snd.playlists === false) snd.playlists = [];
-      console.log(snd.playlists);
+      _ref = snd.playlists;
+      for (index in _ref) {
+        playlist = _ref[index];
+        playlist.id = index;
+        $new_item = $(snd.playlist_item_template.render(playlist));
+        snd.handlersForNewPlaylist($new_item);
+        $("#playlists_list ol").prepend($new_item);
+      }
     }
   };
 
-  snd.createPlaylist = function() {};
+  snd.createPlaylist = function() {
+    return new snd.Playlist({
+      db_prefix: snd.db_prefix
+    });
+  };
 
   snd.editPlaylist = function() {};
 
+  snd.handlersForNewPlaylist = function(element) {
+    var create_button;
+    create_button = element.find(".create");
+    return create_button.on('click', function(e) {
+      var my_form, my_playlist;
+      e.stop();
+      console.log("got click");
+      my_form = $(this).parents("form");
+      my_playlist = snd.createPlaylist();
+      console.log(my_playlist);
+      my_playlist.save({
+        title: my_form.find(".title").val(),
+        description: my_form.find(".desc").val()
+      });
+      return false;
+    });
+  };
+
   $.domReady(function() {
+    $(".navbar .btn-navbar").on('click', function() {
+      return $(".navbar").toggleClass("active");
+    });
+    $(".navbar .nav li a").on('click', function(e) {
+      var my_target;
+      e.stop();
+      my_target = $("#" + $(this).attr("data-target"));
+      $(".navbar .nav li.active").removeClass("active");
+      $(this).parent().addClass("active");
+      $(".content_div.active").removeClass("active");
+      my_target.addClass("active");
+      $(".navbar").removeClass("active");
+      return false;
+    });
+    $("#create_playlist_button").on('click', function() {
+      var $new_item;
+      $new_item = $(snd.playlist_new_template.render({}));
+      snd.handlersForNewPlaylist($new_item);
+      return $("#playlists_list ol").prepend($new_item);
+    });
     snd.initialize_soundcloud();
     snd.getTracks();
     return snd.getPlaylists();
