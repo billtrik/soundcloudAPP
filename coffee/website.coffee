@@ -26,7 +26,6 @@ snd.playlist_song_item_template = snd.hogan.compile '
     </div>
   </li>'
 
-
 snd.song_item_template = snd.hogan.compile '
   <li class="song_item clearfix" data-id="{{id}}">
     <div class="image_div">
@@ -88,7 +87,9 @@ snd.setHandlersForExistingPlaylistItem = (element)->
   edit_button       = element.find(".edit")
   delete_button     = element.find(".delete")
   show_songs_button = element.find(".show_songs")
+  play_all_buttons  = element.find(".play_all")
   my_id = element.attr("data-id")
+  my_playlist = snd.my_playlists.list[my_id]
   my_songs_ul = element.find ".songs_list ul"
 
   delete_button.on 'click', (e)->
@@ -122,9 +123,28 @@ snd.setHandlersForExistingPlaylistItem = (element)->
 
     return false
 
+  play_all_buttons.on 'click', (e)->
+    e.stop()
+    target_ul = $("#active_playlist_list ul")
+    target_ul.empty()
+    for index, song of my_playlist.songs_list
+      song.duration = secondsToTime song.duration
+      # data_item.artwork_url = data_item.artwork_url || "#"
+      $new_item = $(snd.song_item_template.render song)
+      snd.setHandlersForNewMusicItem $new_item
+      target_ul.append $new_item
+
+
+    $(".span12 .active").removeClass("active")
+    $(".navbar .nav .active").removeClass("active")
+    $("#active_playlist_list").addClass("active")
+    $("#active_playlist_button").parent().addClass("active")
+
+    return false;
+
   show_songs_button.on 'click', (e)->
     e.stop()
-    my_playlist = snd.my_playlists.list[my_id]
+    
     if element.find(".songs_list").hasClass("active") is false
       my_songs_ul.empty()
       for index, song of my_playlist.songs_list

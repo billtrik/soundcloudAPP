@@ -60,7 +60,7 @@
   }
 }
 
-#songs_list{
+#songs_list, #active_playlist_list{
   ul{
     margin:0px;
     list-style: none;
@@ -104,7 +104,7 @@
   }
 }
 @media (max-width: 770px) {
-  #songs_list {
+  #songs_list, #active_playlist_list {
     ul{
       li{
         display:block;
@@ -115,7 +115,7 @@
   }
 }
 @media (min-width: 771px) and (max-width: 980px) {
-  #songs_list {
+  #songs_list, #active_playlist_list {
     ul{
       margin-right: -15px;
       li{
@@ -126,7 +126,7 @@
   }
 }
 @media (min-width: 981px) and (max-width: 1200px) {
-  #songs_list {
+  #songs_list, #active_playlist_list {
     ul{
       margin-right: -15px;
       li{
@@ -137,7 +137,7 @@
   }
 }
 @media (min-width: 1201px) {
-  #songs_list {
+  #songs_list, #active_playlist_list {
     ul{
       margin-right: -20px;
       li{

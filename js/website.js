@@ -98,11 +98,13 @@
   </li>');
 
   snd.setHandlersForExistingPlaylistItem = function(element) {
-    var delete_button, edit_button, my_id, my_songs_ul, show_songs_button;
+    var delete_button, edit_button, my_id, my_playlist, my_songs_ul, play_all_buttons, show_songs_button;
     edit_button = element.find(".edit");
     delete_button = element.find(".delete");
     show_songs_button = element.find(".show_songs");
+    play_all_buttons = element.find(".play_all");
     my_id = element.attr("data-id");
+    my_playlist = snd.my_playlists.list[my_id];
     my_songs_ul = element.find(".songs_list ul");
     delete_button.on('click', function(e) {
       var my_data_id, my_li;
@@ -131,10 +133,28 @@
       my_li.remove();
       return false;
     });
-    return show_songs_button.on('click', function(e) {
-      var $new_item, index, my_playlist, song, _ref;
+    play_all_buttons.on('click', function(e) {
+      var $new_item, index, song, target_ul, _ref;
       e.stop();
-      my_playlist = snd.my_playlists.list[my_id];
+      target_ul = $("#active_playlist_list ul");
+      target_ul.empty();
+      _ref = my_playlist.songs_list;
+      for (index in _ref) {
+        song = _ref[index];
+        song.duration = secondsToTime(song.duration);
+        $new_item = $(snd.song_item_template.render(song));
+        snd.setHandlersForNewMusicItem($new_item);
+        target_ul.append($new_item);
+      }
+      $(".span12 .active").removeClass("active");
+      $(".navbar .nav .active").removeClass("active");
+      $("#active_playlist_list").addClass("active");
+      $("#active_playlist_button").parent().addClass("active");
+      return false;
+    });
+    return show_songs_button.on('click', function(e) {
+      var $new_item, index, song, _ref;
+      e.stop();
       if (element.find(".songs_list").hasClass("active") === false) {
         my_songs_ul.empty();
         _ref = my_playlist.songs_list;

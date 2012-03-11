@@ -51,10 +51,10 @@
         #playlists_list ul li .songs_list.active {
           display: block; }
 
-#songs_list ul {
+#songs_list ul, #active_playlist_list ul {
   margin: 0px;
   list-style: none; }
-#songs_list li {
+#songs_list li, #active_playlist_list li {
   float: left; }
 
 @media (max-width: 980px) {
@@ -77,26 +77,26 @@
   .navbar .btn-navbar {
     display: none; } }
 @media (max-width: 770px) {
-  #songs_list ul li {
+  #songs_list ul li, #active_playlist_list ul li {
     display: block;
     float: none;
     margin: 10px 0; } }
 @media (min-width: 771px) and (max-width: 980px) {
-  #songs_list ul {
+  #songs_list ul, #active_playlist_list ul {
     margin-right: -15px; }
-    #songs_list ul li {
+    #songs_list ul li, #active_playlist_list ul li {
       width: 45%;
       margin: 10px 12px 10px 0; } }
 @media (min-width: 981px) and (max-width: 1200px) {
-  #songs_list ul {
+  #songs_list ul, #active_playlist_list ul {
     margin-right: -15px; }
-    #songs_list ul li {
+    #songs_list ul li, #active_playlist_list ul li {
       width: 45%;
       margin: 10px 24px 10px 0; } }
 @media (min-width: 1201px) {
-  #songs_list ul {
+  #songs_list ul, #active_playlist_list ul {
     margin-right: -20px; }
-    #songs_list ul li {
+    #songs_list ul li, #active_playlist_list ul li {
       width: 30%;
       margin: 10px 14px 10px 0; } }
 .song_item {
