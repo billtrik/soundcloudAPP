@@ -195,7 +195,7 @@ snd.initialize_soundcloud = ->
   return
       
 snd.getTracks = ->
-  SC.get "/tracks", {limit: 2}, (tracks)->
+  SC.get "/tracks", {limit: 12}, (tracks)->
     for track in tracks
       snd.current_songs[track.id] = track
     snd.renderSongs tracks

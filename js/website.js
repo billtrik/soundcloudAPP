@@ -209,7 +209,7 @@
 
   snd.getTracks = function() {
     SC.get("/tracks", {
-      limit: 2
+      limit: 12
     }, function(tracks) {
       var track, _i, _len;
       for (_i = 0, _len = tracks.length; _i < _len; _i++) {
