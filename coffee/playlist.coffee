@@ -7,12 +7,16 @@
       if this instanceof Playlists is false
         return new Playlists(db_prefix)
 
-      @db_prefix      = db_prefix
-      @list = []
-      list = db.get @db_prefix + "playlists"
-      if list isnt false
-        for item in list
+      @db_prefix     = db_prefix
+      @list          = []
+      @playlists_ids = db.get @db_prefix + "playlist_ids"
+      if @playlists_ids isnt false
+        for id in @playlists_ids
+          item = db.get @db_prefix + "playlist_" + id
+          item.db_prefix   = @db_prefix
           @list.push new Playlist(item)
+      else
+        @playlists_ids = []
       return this
 
     Playlists:: = 
@@ -20,26 +24,30 @@
         return @list[id]
 
       create: (params)->
-        params.id         = @list.length
+        my_id             = @list.length
+        params.id         = my_id
         params.active     = true
         params.songs_list = params.songs_list || []
         new_playlist      = new Playlist params
 
+        @playlists_ids.push my_id
+        db.set @db_prefix + "playlist_ids", @playlists_ids
         @list.push new_playlist
-        db.set @db_prefix + "playlists", @list
+        db.set @db_prefix + "playlist_" + my_id, new_playlist
         
         return new_playlist
 
       remove: (id)->
         @list[id].active = false
-        db.set @db_prefix + "playlists", @list
+        db.set @db_prefix + "playlist_" + id, @list[id]
         return true
 
       update: (playlist)->
-        if (item_to_update = @list[playlist.id])
+        id = playlist.id
+        if (item_to_update = @list[id])
           item_to_update.title       = playlist.title
           item_to_update.description = playlist.description
-          db.set @db_prefix + "playlists", @list
+          db.set @db_prefix + "playlist_" + id, @list[id]
         return
 
 
@@ -47,11 +55,13 @@
       if this instanceof Playlist is false
         return new Playlist(params)
 
+      @db_prefix   = params.db_prefix
       @id          = params.id
       @title       = params.title
       @description = params.description
       @active      = params.active
       @songs_list  = []
+      params.songs_list = params.songs_list || []
       for item in params.songs_list
         @songs_list.push new Song(item)
 
@@ -60,7 +70,7 @@
     Playlist:: =
       add_song: (song)->
         @songs_list.push new Song(song)
-        console.log @songs_list
+        db.set @db_prefix + "playlist_" + @id, @
         return 
 
       remove_song: (song)->

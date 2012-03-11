@@ -95,7 +95,7 @@
       e.stop();
       my_li = $(this).parents("li");
       my_data_id = parseInt(my_li.attr("data-id"), 10);
-      playlist = snd.my_playlists.search(my_data_id);
+      playlist = snd.my_playlists.get(my_data_id);
       playlist.button_text = "Update It";
       $new_item = $(snd.playlist_new_template.render(playlist));
       delete playlist.button_text;
