@@ -58,7 +58,7 @@
         }
       };
       Playlist = function(params) {
-        var item, _i, _len, _ref;
+        var index, item, _ref;
         if (this instanceof Playlist === false) return new Playlist(params);
         this.db_prefix = params.db_prefix;
         this.id = params.id;
@@ -66,10 +66,10 @@
         this.description = params.description;
         this.active = params.active;
         this.songs_list = {};
-        params.songs_list = params.songs_list || [];
+        params.songs_list = params.songs_list || {};
         _ref = params.songs_list;
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          item = _ref[_i];
+        for (index in _ref) {
+          item = _ref[index];
           this.songs_list[item.id] = new Song(item);
         }
         return this;
@@ -79,7 +79,11 @@
           this.songs_list[song.id] = new Song(song);
           db.set(this.db_prefix + "playlist_" + this.id, this);
         },
-        remove_song: function(song) {}
+        remove_song: function(id) {
+          this.songs_list[id] = null;
+          delete this.songs_list[id];
+          db.set(this.db_prefix + "playlist_" + this.id, this);
+        }
       };
       Song = function(params) {
         if (this instanceof Song === false) return new Song(params);

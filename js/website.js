@@ -26,6 +26,20 @@
     element: null
   };
 
+  snd.playlist_song_item_template = snd.hogan.compile('\
+  <li class="song_item clearfix" data-id="{{id}}">\
+    <div class="image_div">\
+      <img src="{{artwork_url}}" />\
+    </div>\
+    <div class="details">\
+      <h5>{{title}}</h5>\
+      <p class="duration">{{duration}}</p>\
+      <div class="buttons">\
+        <button class="remove_me btn btn-danger" data-id="{{id}}">Remove Me</button>\
+      </div>\
+    </div>\
+  </li>');
+
   snd.song_item_template = snd.hogan.compile('\
   <li class="song_item clearfix" data-id="{{id}}">\
     <div class="image_div">\
@@ -52,7 +66,7 @@
         <textarea class="desc" name="description" placeholder="Insert Description">{{description}}</textarea>\
       </div>\
       <div class="buttons">\
-        <button class="btn btn-success create" type="submit">{{button_text}}</button>\
+        <button class="btn btn-small btn-success create" type="submit">{{button_text}}</button>\
       </div>\
     </form>\
   </li>');
@@ -60,27 +74,36 @@
   snd.playlist_item_template = snd.hogan.compile('\
   <li class="playlist_item" data-id="{{id}}">\
     <div class="title_cont">\
-      <p class="title">{{title}}</p>\
+      <p class="title"><span>Title:</span>{{title}}</p>\
     </div>\
     <div class="desc_cont">\
-      <p class="desc">{{description}}</p>\
+      <p class="desc"><span>Description:</span>{{description}}</p>\
     </div>\
     \
     <div class="buttons">\
-      <button class="btn btn-info edit" type="submit">Edit It</button>\
-      <button class="btn btn-danger delete" type="submit">Delete It</button>\
+      <button class="btn btn-small btn-info edit" >Edit It</button>\
+      <button class="btn btn-small btn-danger delete" >Delete It</button>\
+      <button class="btn btn-small show_songs" >Show Songs</button>\
+      <button class="btn btn-small btn-success play_all">Play All</button>\
+    </div>\
+\
+    <div class="songs_list">\
+      <ul class="clearfix"></ul>\
     </div>\
   </li>');
 
   snd.playlist_popup_template = snd.hogan.compile('\
   <li class="playlist_popup_item">\
-    <button class="add_here" data-id="{{id}}">{{title}}</button>\
+    <button class="btn btn-primary add_here" data-id="{{id}}">{{title}}</button>\
   </li>');
 
   snd.setHandlersForExistingPlaylistItem = function(element) {
-    var delete_button, edit_button;
+    var delete_button, edit_button, my_id, my_songs_ul, show_songs_button;
     edit_button = element.find(".edit");
     delete_button = element.find(".delete");
+    show_songs_button = element.find(".show_songs");
+    my_id = element.attr("data-id");
+    my_songs_ul = element.find(".songs_list ul");
     delete_button.on('click', function(e) {
       var my_data_id, my_li;
       e.stop();
@@ -90,7 +113,7 @@
       my_li.remove();
       return false;
     });
-    return edit_button.on('click', function(e) {
+    edit_button.on('click', function(e) {
       var $new_item, my_data_id, my_li, playlist, previous;
       e.stop();
       my_li = $(this).parents("li");
@@ -101,11 +124,37 @@
       delete playlist.button_text;
       snd.setHandlersForUpdatingPlaylistItem($new_item, playlist);
       if ((previous = my_li.previous()).length === 0) {
-        $("#playlists_list ol").prepend($new_item);
+        $("#playlists_list > ul").prepend($new_item);
       } else {
         previous.after($new_item);
       }
       my_li.remove();
+      return false;
+    });
+    return show_songs_button.on('click', function(e) {
+      var $new_item, index, my_playlist, song, _ref;
+      e.stop();
+      my_playlist = snd.my_playlists.list[my_id];
+      if (element.find(".songs_list").hasClass("active") === false) {
+        my_songs_ul.empty();
+        _ref = my_playlist.songs_list;
+        for (index in _ref) {
+          song = _ref[index];
+          $new_item = $(snd.playlist_song_item_template.render(song));
+          $new_item.find(".remove_me").on('click', function(e) {
+            var my_playlist_id, my_song_id;
+            e.stop();
+            my_song_id = $(this).attr("data-id");
+            my_playlist_id = $(this).parents(".playlist_item").attr("data-id");
+            snd.my_playlists.list[my_playlist_id].remove_song(my_song_id);
+            $(this).parents(".song_item").remove();
+            return false;
+          });
+          snd.setHandlersForExistingPlaylistItem($new_item);
+          my_songs_ul.append($new_item);
+        }
+      }
+      element.find(".songs_list").toggleClass("active");
       return false;
     });
   };
@@ -123,7 +172,7 @@
       $new_item = $(snd.playlist_item_template.render(playlist));
       snd.setHandlersForExistingPlaylistItem($new_item);
       if ((previous = my_li.previous()).length === 0) {
-        $("#playlists_list ol").prepend($new_item);
+        $("#playlists_list > ul").prepend($new_item);
       } else {
         previous.after($new_item);
       }
@@ -231,6 +280,7 @@
       var $new_item, data_item, ul, _i, _len, _ref, _results;
       $("#playlists_popup").show("block");
       ul = $("#playlists_popup ul");
+      ul.empty();
       _ref = snd.my_playlists.list;
       _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -265,7 +315,7 @@
       if (playlist.active === true) {
         $new_item = $(snd.playlist_item_template.render(playlist));
         snd.setHandlersForExistingPlaylistItem($new_item);
-        $("#playlists_list ol").prepend($new_item);
+        $("#playlists_list > ul").prepend($new_item);
       }
     }
   };
@@ -285,8 +335,8 @@
       });
       my_li.remove();
       $new_item = $(snd.playlist_item_template.render(new_playlist));
-      snd.setHandlersForNewPlaylistItem($new_item);
-      $("#playlists_list ol").prepend($new_item);
+      snd.setHandlersForExistingPlaylistItem($new_item);
+      $("#playlists_list > ul").prepend($new_item);
       return false;
     });
   };
@@ -312,7 +362,10 @@
         button_text: "Create It"
       }));
       snd.setHandlersForNewPlaylistItem($new_item);
-      return $("#playlists_list ol").prepend($new_item);
+      return $("#playlists_list > ul").prepend($new_item);
+    });
+    $("#close_me").click(function() {
+      return $("#playlists_popup").hide();
     });
     snd.initialize_soundcloud();
     snd.getTracks();

@@ -22,6 +22,34 @@
     position: absolute;
     top: 24px;
     right: 16px; }
+  #playlists_list ul {
+    margin: 10px 0 0 0;
+    list-style: none; }
+    #playlists_list ul li {
+      float: left;
+      border: 1px solid #333;
+      background-color: #555;
+      color: #EEE;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      padding: 10px;
+      width: 100%;
+      box-sizing: border-box;
+      -moz-box-sizing: border-box;
+      /* Firefox */
+      -webkit-box-sizing: border-box;
+      /* Safari */ }
+      #playlists_list ul li p span {
+        display: inline-block;
+        width: 74px; }
+      #playlists_list ul li .songs_list {
+        display: none; }
+        #playlists_list ul li .songs_list ul {
+          margin: 0px; }
+          #playlists_list ul li .songs_list ul li {
+            margin: 10px 0 0 0; }
+        #playlists_list ul li .songs_list.active {
+          display: block; }
 
 #songs_list ul {
   margin: 0px;
@@ -106,17 +134,27 @@
 #playlists_popup {
   display: none;
   position: fixed;
-  width: 400px;
-  height: 400px;
+  width: 160px;
+  height: 260px;
   padding: 20px;
   top: 50%;
-  margin-top: -200px;
+  margin-top: -150px;
   left: 50%;
-  margin-left: -200px;
+  margin-left: -100px;
   background-color: white;
   border-radius: 3px;
   border: 1px solid #333;
   box-shadow: 0 0 40px black, 0px 0px 5px grey inset; }
+  #playlists_popup a {
+    position: absolute;
+    top: -15px;
+    right: -15px;
+    background: black;
+    color: white;
+    margin: 0px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: bold; }
   #playlists_popup ul {
     margin: 0px;
     list-style: none;
@@ -126,9 +164,5 @@
   #playlists_popup li {
     margin-bottom: 10px; }
   #playlists_popup button {
-    border: 0 none;
-    display: block;
     width: 100%;
-    background-color: green;
-    color: black;
     height: 50px; }

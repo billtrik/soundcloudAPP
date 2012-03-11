@@ -62,8 +62,8 @@
       @description = params.description
       @active      = params.active
       @songs_list  = {}
-      params.songs_list = params.songs_list || []
-      for item in params.songs_list
+      params.songs_list = params.songs_list || {}
+      for index, item of params.songs_list
         @songs_list[item.id] = new Song(item)
 
       return this
@@ -74,7 +74,10 @@
         db.set @db_prefix + "playlist_" + @id, @
         return 
 
-      remove_song: (song)->
+      remove_song: (id)->
+        @songs_list[id] = null
+        delete @songs_list[id]
+        db.set @db_prefix + "playlist_" + @id, @
         return
     
 

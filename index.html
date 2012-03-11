@@ -27,11 +27,14 @@
       <div class="container">
         <p class="brand" >SoundCloudAPP</p>
         <ul class="nav">
-          <li class="active">
+          <li class="">
             <a id="browse_music_button" data-target="songs_list" href="#">Browse Music</a>
           </li>
-          <li class="">
+          <li class="active">
             <a id="playlist_button" data-target="playlists_list" href="#">Playlists</a>
+          </li>
+          <li class="">
+            <a id="active_playlist_button" data-target="active_playlist_list" href="#">Active Playlist</a>
           </li>
         </ul>
         <a class="btn btn-navbar">
@@ -48,17 +51,21 @@
       <div class="span12">
         
 
-        <div id="songs_list" class="content_div active well">
+        <div id="active_playlist_list" class="content_div  well">
+        
+        </div>
+
+        <div id="songs_list" class="content_div well">
           <h2>Browse Music</h2>
           <ul class="clearfix">
           </ul>
         </div>
 
-        <div id="playlists_list" class="content_div well">
+        <div id="playlists_list" class="content_div active well">
           <h2>Playlists</h2>
           <button id="create_playlist_button" class="btn btn-success">New Playlist</button>
-          <ol class="clearfix">
-          </ol>
+          <ul class="clearfix">
+          </ul>
         </div>
 
 
@@ -67,6 +74,7 @@
   </div>
 
   <div id="playlists_popup">
+    <a href="#" class="btn" id="close_me">X</a>
     <ul></ul>
   </div>
     
