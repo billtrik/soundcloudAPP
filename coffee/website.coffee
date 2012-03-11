@@ -6,7 +6,7 @@ snd.hogan        = Hogan
 snd.timeoutVar   = null
 snd.db           = snd.db || null
 snd.db_prefix    = "SND_app_"
-snd.playlists    = []
+snd.my_playlists = snd.Playlists(snd.db_prefix)
 snd.nowPlaying   =
   obj     : null
   element : null
@@ -37,7 +37,7 @@ snd.playlist_new_template = snd.hogan.compile '
         <textarea class="desc" name="description" placeholder="Insert Description">{{description}}</textarea>
       </div>
       <div class="buttons">
-        <button class="btn btn-success create" type="submit">Create It</button>
+        <button class="btn btn-success create" type="submit">{{button_text}}</button>
       </div>
     </form>
   </li>'
@@ -57,19 +57,63 @@ snd.playlist_item_template = snd.hogan.compile '
     </div>
   </li>'
 
-snd.getUserDetails = ->
-  SC.get "/me", (me) ->
-    $("#username").text(me.username)
-    $("#description").val(me.description)
-  # if SC.isConnected()
-  #   snd.getUserDetails()
-  #   $("#notloggedin").hide()
-  #   $("#loggedin").show('block')
+snd.setHandlersForExistingPlaylistItem = (element)->
+  edit_button   = element.find(".edit")
+  delete_button = element.find(".delete")
+  
+  delete_button.on 'click', (e)->
+    e.stop()
+    
+    my_li = $(this).parents("li")
+    my_data_id = parseInt my_li.attr("data-id"), 10
+    snd.my_playlists.remove my_data_id
+    my_li.remove()
+    return false
 
+  edit_button.on 'click', (e)->
+    e.stop()
+    
+    my_li = $(this).parents("li")
+    my_data_id = parseInt my_li.attr("data-id"), 10
+    playlist = snd.my_playlists.get my_data_id
+    
+    playlist.button_text = "Update It"
+    $new_item = $(snd.playlist_new_template.render playlist)
+    delete playlist.button_text
+    snd.setHandlersForUpdatingPlaylistItem $new_item, playlist
 
-  # $("#connect").on "click", ->
-  #   SC.connect ->
-  #     getUserDetails()
+    if (previous = my_li.previous()).length is 0
+      $("#playlists_list ol").prepend $new_item
+    else
+      previous.after $new_item
+
+    my_li.remove()
+    
+
+    return false
+
+snd.setHandlersForUpdatingPlaylistItem = (element, playlist)->
+  create_button = element.find(".create")
+  create_button.on 'click', (e)->
+    e.stop()
+    
+    my_li                = $(this).parents("li")
+    playlist.title       = my_li.find(".title").val()
+    playlist.description = my_li.find(".desc").val()
+
+    snd.my_playlists.update playlist
+
+    $new_item = $(snd.playlist_item_template.render playlist)
+    snd.setHandlersForExistingPlaylistItem $new_item
+
+    if (previous = my_li.previous()).length is 0
+      $("#playlists_list ol").prepend $new_item
+    else
+      previous.after $new_item
+
+    my_li.remove()
+    
+    return false;
 
 snd.initialize_soundcloud = ->
   SC.initialize
@@ -86,7 +130,7 @@ snd.renderSongs = (data)->
     data_item.duration = secondsToTime data_item.duration
     # data_item.artwork_url = data_item.artwork_url || "#"
     $new_item = $(snd.song_item_template.render data_item)
-    snd.setHandlersFor $new_item
+    snd.setHandlersForNewMusicItem $new_item
     $("#songs_list ul").append $new_item
   
 snd.changeButtonToStop = (element)->
@@ -110,7 +154,7 @@ snd.timeoutfunc = ->
       snd.timeoutfunc()
   , 1000
 
-snd.setHandlersFor = (item)->
+snd.setHandlersForNewMusicItem = (item)->
   item.find(".play_me").on 'click', ->
     if snd.nowPlaying.element
       snd.changeButtonToPlay snd.nowPlaying.element
@@ -144,26 +188,15 @@ snd.setHandlersFor = (item)->
 
   return
 
-snd.getPlaylists = ->
- if snd.db
-  snd.playlists = snd.db.get snd.db_prefix + "playlists" || []
-  snd.playlists = [] if snd.playlists is false
-  for index, playlist of snd.playlists
-    playlist.id = index
-    $new_item = $(snd.playlist_item_template.render playlist)
-    snd.handlersForNewPlaylist $new_item
-    $("#playlists_list ol").prepend $new_item
+snd.printExistingPlaylists = ->
+  for index, playlist of snd.my_playlists.playlists_list
+    if playlist.active is true
+      $new_item = $(snd.playlist_item_template.render playlist)
+      snd.setHandlersForExistingPlaylistItem $new_item
+      $("#playlists_list ol").prepend $new_item
   return
 
-snd.createPlaylist = ->
-  new snd.Playlist
-    db_prefix: snd.db_prefix
-
-snd.editPlaylist = ->
-
-  return
-
-snd.handlersForNewPlaylist = (element)->
+snd.setHandlersForNewPlaylistItem = (element)->
   create_button = element.find(".create")
   create_button.on 'click', (e)->
     e.stop()
@@ -173,19 +206,15 @@ snd.handlersForNewPlaylist = (element)->
     my_title = my_li.find(".title").val()
     my_desc = my_li.find(".desc").val()
 
-    new_playlist = snd.createPlaylist()
-    my_id = new_playlist.save 
+  
+    new_playlist = snd.my_playlists.create 
       title       : my_title
       description : my_desc
+        
     my_li.remove()
     
-    playlist_data = 
-      id          : my_id
-      title       : my_title
-      description : my_desc
-
-    $new_item = $(snd.playlist_item_template.render playlist_data)
-    snd.handlersForNewPlaylist $new_item
+    $new_item = $(snd.playlist_item_template.render new_playlist)
+    snd.setHandlersForNewPlaylistItem $new_item
     $("#playlists_list ol").prepend $new_item
     return false;
 
@@ -209,13 +238,13 @@ $.domReady ->
     return false
 
   $("#create_playlist_button").on 'click',->
-    $new_item = $(snd.playlist_new_template.render {})
-    snd.handlersForNewPlaylist $new_item
+    $new_item = $(snd.playlist_new_template.render {button_text: "Create It"} )
+    snd.setHandlersForNewPlaylistItem $new_item
     $("#playlists_list ol").prepend $new_item
 
   snd.initialize_soundcloud()
   snd.getTracks()
-  snd.getPlaylists()
+  snd.printExistingPlaylists()
 
 
 
@@ -251,3 +280,18 @@ secondsToTime = (secs)->
   #     console.log "error:", resp
   #   complete: (resp)->
   #     console.log "complete:", resp
+
+
+  snd.getUserDetails = ->
+  SC.get "/me", (me) ->
+    $("#username").text(me.username)
+    $("#description").val(me.description)
+  # if SC.isConnected()
+  #   snd.getUserDetails()
+  #   $("#notloggedin").hide()
+  #   $("#loggedin").show('block')
+
+
+  # $("#connect").on "click", ->
+  #   SC.connect ->
+  #     getUserDetails()

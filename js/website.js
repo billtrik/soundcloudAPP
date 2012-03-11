@@ -17,7 +17,7 @@
 
   snd.db_prefix = "SND_app_";
 
-  snd.playlists = [];
+  snd.my_playlists = snd.Playlists(snd.db_prefix);
 
   snd.nowPlaying = {
     obj: null,
@@ -50,7 +50,7 @@
         <textarea class="desc" name="description" placeholder="Insert Description">{{description}}</textarea>\
       </div>\
       <div class="buttons">\
-        <button class="btn btn-success create" type="submit">Create It</button>\
+        <button class="btn btn-success create" type="submit">{{button_text}}</button>\
       </div>\
     </form>\
   </li>');
@@ -70,10 +70,58 @@
     </div>\
   </li>');
 
-  snd.getUserDetails = function() {
-    return SC.get("/me", function(me) {
-      $("#username").text(me.username);
-      return $("#description").val(me.description);
+  snd.setHandlersForExistingPlaylistItem = function(element) {
+    var delete_button, edit_button;
+    edit_button = element.find(".edit");
+    delete_button = element.find(".delete");
+    delete_button.on('click', function(e) {
+      var my_data_id, my_li;
+      e.stop();
+      my_li = $(this).parents("li");
+      my_data_id = parseInt(my_li.attr("data-id"), 10);
+      snd.my_playlists.remove(my_data_id);
+      my_li.remove();
+      return false;
+    });
+    return edit_button.on('click', function(e) {
+      var $new_item, my_data_id, my_li, playlist, previous;
+      e.stop();
+      my_li = $(this).parents("li");
+      my_data_id = parseInt(my_li.attr("data-id"), 10);
+      playlist = snd.my_playlists.get(my_data_id);
+      playlist.button_text = "Update It";
+      $new_item = $(snd.playlist_new_template.render(playlist));
+      delete playlist.button_text;
+      snd.setHandlersForUpdatingPlaylistItem($new_item, playlist);
+      if ((previous = my_li.previous()).length === 0) {
+        $("#playlists_list ol").prepend($new_item);
+      } else {
+        previous.after($new_item);
+      }
+      my_li.remove();
+      return false;
+    });
+  };
+
+  snd.setHandlersForUpdatingPlaylistItem = function(element, playlist) {
+    var create_button;
+    create_button = element.find(".create");
+    return create_button.on('click', function(e) {
+      var $new_item, my_li, previous;
+      e.stop();
+      my_li = $(this).parents("li");
+      playlist.title = my_li.find(".title").val();
+      playlist.description = my_li.find(".desc").val();
+      snd.my_playlists.update(playlist);
+      $new_item = $(snd.playlist_item_template.render(playlist));
+      snd.setHandlersForExistingPlaylistItem($new_item);
+      if ((previous = my_li.previous()).length === 0) {
+        $("#playlists_list ol").prepend($new_item);
+      } else {
+        previous.after($new_item);
+      }
+      my_li.remove();
+      return false;
     });
   };
 
@@ -99,7 +147,7 @@
       data_item = data[_i];
       data_item.duration = secondsToTime(data_item.duration);
       $new_item = $(snd.song_item_template.render(data_item));
-      snd.setHandlersFor($new_item);
+      snd.setHandlersForNewMusicItem($new_item);
       _results.push($("#songs_list ul").append($new_item));
     }
     return _results;
@@ -129,7 +177,7 @@
     }, 1000);
   };
 
-  snd.setHandlersFor = function(item) {
+  snd.setHandlersForNewMusicItem = function(item) {
     item.find(".play_me").on('click', function() {
       var me, my_id;
       if (snd.nowPlaying.element) {
@@ -167,52 +215,35 @@
     });
   };
 
-  snd.getPlaylists = function() {
+  snd.printExistingPlaylists = function() {
     var $new_item, index, playlist, _ref;
-    if (snd.db) {
-      snd.playlists = snd.db.get(snd.db_prefix + "playlists" || []);
-      if (snd.playlists === false) snd.playlists = [];
-      _ref = snd.playlists;
-      for (index in _ref) {
-        playlist = _ref[index];
-        playlist.id = index;
+    _ref = snd.my_playlists.playlists_list;
+    for (index in _ref) {
+      playlist = _ref[index];
+      if (playlist.active === true) {
         $new_item = $(snd.playlist_item_template.render(playlist));
-        snd.handlersForNewPlaylist($new_item);
+        snd.setHandlersForExistingPlaylistItem($new_item);
         $("#playlists_list ol").prepend($new_item);
       }
     }
   };
 
-  snd.createPlaylist = function() {
-    return new snd.Playlist({
-      db_prefix: snd.db_prefix
-    });
-  };
-
-  snd.editPlaylist = function() {};
-
-  snd.handlersForNewPlaylist = function(element) {
+  snd.setHandlersForNewPlaylistItem = function(element) {
     var create_button;
     create_button = element.find(".create");
     return create_button.on('click', function(e) {
-      var $new_item, my_desc, my_id, my_li, my_title, new_playlist, playlist_data;
+      var $new_item, my_desc, my_li, my_title, new_playlist;
       e.stop();
       my_li = $(this).parents("li");
       my_title = my_li.find(".title").val();
       my_desc = my_li.find(".desc").val();
-      new_playlist = snd.createPlaylist();
-      my_id = new_playlist.save({
+      new_playlist = snd.my_playlists.create({
         title: my_title,
         description: my_desc
       });
       my_li.remove();
-      playlist_data = {
-        id: my_id,
-        title: my_title,
-        description: my_desc
-      };
-      $new_item = $(snd.playlist_item_template.render(playlist_data));
-      snd.handlersForNewPlaylist($new_item);
+      $new_item = $(snd.playlist_item_template.render(new_playlist));
+      snd.setHandlersForNewPlaylistItem($new_item);
       $("#playlists_list ol").prepend($new_item);
       return false;
     });
@@ -235,13 +266,15 @@
     });
     $("#create_playlist_button").on('click', function() {
       var $new_item;
-      $new_item = $(snd.playlist_new_template.render({}));
-      snd.handlersForNewPlaylist($new_item);
+      $new_item = $(snd.playlist_new_template.render({
+        button_text: "Create It"
+      }));
+      snd.setHandlersForNewPlaylistItem($new_item);
       return $("#playlists_list ol").prepend($new_item);
     });
     snd.initialize_soundcloud();
     snd.getTracks();
-    return snd.getPlaylists();
+    return snd.printExistingPlaylists();
   });
 
   secondsToTime = function(secs) {
@@ -256,6 +289,11 @@
     seconds = Math.ceil(divisor_for_seconds);
     if (seconds < 10) seconds = "0" + seconds;
     return minutes + ":" + seconds;
+    snd.getUserDetails = function() {};
+    return SC.get("/me", function(me) {
+      $("#username").text(me.username);
+      return $("#description").val(me.description);
+    });
   };
 
 }).call(this);

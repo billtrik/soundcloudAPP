@@ -1,55 +1,57 @@
 (function() {
 
   (function(window, document) {
-    var Playlist, db, snd;
+    var Playlist, Playlists, db, snd;
     snd = window.SOUNDTEST = window.SOUNDTEST || {};
     db = snd.db;
-    if (snd.Playlist === void 0) {
+    if (snd.Playlists === void 0) {
+      Playlists = function(db_prefix) {
+        if (this instanceof Playlists === false) return new Playlists(db_prefix);
+        this.db_prefix = db_prefix;
+        this.playlists_list = db.get(this.db_prefix + "playlists");
+        if (this.playlists_list === false) this.playlists_list = [];
+        this.length = this.playlists_list.length;
+        return this;
+      };
+      Playlists.prototype = {
+        get: function(id) {
+          return this.playlists_list[id];
+        },
+        create: function(params) {
+          var new_playlist;
+          params.id = this.length;
+          params.active = true;
+          params.songs_list = params.songs_list || [];
+          new_playlist = new Playlist(params);
+          this.playlists_list.push(new_playlist);
+          this.length = this.playlists_list.length;
+          db.set(this.db_prefix + "playlists", this.playlists_list);
+          return new_playlist;
+        },
+        remove: function(id) {
+          this.playlists_list[id].active = false;
+          db.set(this.db_prefix + "playlists", this.playlists_list);
+          return true;
+        },
+        update: function(playlist) {
+          var item_to_update;
+          if ((item_to_update = this.playlists_list[playlist.id])) {
+            item_to_update.title = playlist.title;
+            item_to_update.description = playlist.description;
+            db.set(this.db_prefix + "playlists", this.playlists_list);
+          }
+        }
+      };
       Playlist = function(params) {
         if (this instanceof Playlist === false) return new Playlist(params);
-        params = params || {};
-        this.db_prefix = params.db_prefix;
-        this.title = "";
-        this.description = "";
-        this.songs_list = [];
-        if (params.playlist_id) this.init(params.playlist_id);
+        this.id = params.id;
+        this.title = params.title;
+        this.description = params.description;
+        this.active = params.active;
+        this.songs_list = JSON.parse(JSON.stringify(params.songs_list));
+        return this;
       };
-      Playlist.prototype = {
-        init: function(id) {
-          var playlists, result;
-          playlists = Playlist.get_all_playlists();
-          if (playlists[id]) {
-            result = Object.create(playlists[id]);
-          } else {
-            result = {};
-          }
-          playlists = null;
-          delete playlists;
-          return result;
-        },
-        save: function(params) {
-          var length, playlists;
-          playlists = Playlist.get_all_playlists(this.db_prefix);
-          if (playlists === false) playlists = [];
-          length = playlists.length + 1;
-          playlists.push({
-            title: params.title,
-            description: params.description
-          });
-          db.set(this.db_prefix + "playlists", playlists);
-          playlists = null;
-          delete playlists;
-          return length;
-        },
-        edit: function(params) {},
-        "delete": function(params) {},
-        add_song: function(params) {},
-        remove_song: function(params) {}
-      };
-      Playlist.get_all_playlists = function(prefix) {
-        return db.get(prefix + "playlists");
-      };
-      snd.Playlist = Playlist;
+      snd.Playlists = Playlists;
     }
   })(window, document);
 

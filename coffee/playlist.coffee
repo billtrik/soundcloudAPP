@@ -2,64 +2,61 @@
   snd = window.SOUNDTEST = window.SOUNDTEST || {};
   db = snd.db
 
-  if snd.Playlist is undefined
+  if snd.Playlists is undefined
+    Playlists = (db_prefix)->
+      if this instanceof Playlists is false
+        return new Playlists(db_prefix)
+
+      @db_prefix      = db_prefix
+      @playlists_list = db.get @db_prefix + "playlists"
+      @playlists_list = [] if @playlists_list is false
+      @length = @playlists_list.length
+      return this
+
+    Playlists:: = 
+      get: (id)->
+        return @playlists_list[id]
+
+      create: (params)->
+        params.id         = @length
+        params.active     = true
+        params.songs_list = params.songs_list || []
+        new_playlist      = new Playlist params
+
+        @playlists_list.push new_playlist
+        @length = @playlists_list.length
+        db.set @db_prefix + "playlists", @playlists_list
+        
+        return new_playlist
+
+      remove: (id)->
+        @playlists_list[id].active = false
+        db.set @db_prefix + "playlists", @playlists_list
+        return true
+
+      update: (playlist)->
+        if (item_to_update = @playlists_list[playlist.id])
+          item_to_update.title       = playlist.title
+          item_to_update.description = playlist.description
+          db.set @db_prefix + "playlists", @playlists_list
+        return
+
+
     Playlist = (params)->
       if this instanceof Playlist is false
         return new Playlist(params)
 
-      params       = params || {}
-      @db_prefix   = params.db_prefix
-      @title       = ""
-      @description = ""
-      @songs_list  = []
+      @id          = params.id
+      @title       = params.title
+      @description = params.description
+      @active      = params.active
+      @songs_list  = JSON.parse( JSON.stringify( params.songs_list ))
 
-      if params.playlist_id
-        @init(params.playlist_id)
-      return
+      return this
 
-    Playlist:: =
-      init: (id)->
-        playlists = Playlist.get_all_playlists()
-        if playlists[id]
-          result = Object.create playlists[id] 
-        else
-          result = {}
-        playlists = null
-        delete playlists
-        return result
+    
 
-      save: (params)->
-        playlists = Playlist.get_all_playlists @db_prefix
-        playlists = [] if playlists is false
-        length = playlists.length + 1
-        playlists.push 
-          title: params.title
-          description: params.description 
-        
-        db.set @db_prefix + "playlists", playlists
-        
-        playlists = null
-        delete playlists
+    snd.Playlists = Playlists
 
-        return length
-
-      edit: (params)->
-
-        return
-      delete: (params)->
-
-        return
-      add_song: (params)->
-        return
-      remove_song: (params)->
-        return
-
-
-    Playlist.get_all_playlists = (prefix)->
-      return db.get prefix + "playlists"
-
-
-    snd.Playlist = Playlist
-  
   return
 )(window,document )
