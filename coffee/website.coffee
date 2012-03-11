@@ -7,12 +7,13 @@ snd.timeoutVar   = null
 snd.db           = snd.db || null
 snd.db_prefix    = "SND_app_"
 snd.my_playlists = snd.Playlists(snd.db_prefix)
+snd.current_songs = {}
 snd.nowPlaying   =
   obj     : null
   element : null
 
 snd.song_item_template = snd.hogan.compile '
-  <li class="song_item clearfix">
+  <li class="song_item clearfix" data-id="{{id}}">
     <div class="image_div">
       <img src="{{artwork_url}}" />
     </div>
@@ -57,6 +58,11 @@ snd.playlist_item_template = snd.hogan.compile '
     </div>
   </li>'
 
+snd.playlist_popup_template = snd.hogan.compile '
+  <li class="playlist_popup_item">
+    <button class="add_here" data-id="{{id}}">{{title}}</button>
+  </li>'
+
 snd.setHandlersForExistingPlaylistItem = (element)->
   edit_button   = element.find(".edit")
   delete_button = element.find(".delete")
@@ -75,7 +81,7 @@ snd.setHandlersForExistingPlaylistItem = (element)->
     
     my_li = $(this).parents("li")
     my_data_id = parseInt my_li.attr("data-id"), 10
-    playlist = snd.my_playlists.get my_data_id
+    playlist = snd.my_playlists.search my_data_id
     
     playlist.button_text = "Update It"
     $new_item = $(snd.playlist_new_template.render playlist)
@@ -122,8 +128,12 @@ snd.initialize_soundcloud = ->
   return
       
 snd.getTracks = ->
-  SC.get "/tracks", {limit: 12}, (tracks)->
+  SC.get "/tracks", {limit: 2}, (tracks)->
+    for track in tracks
+      snd.current_songs[track.id] = track
     snd.renderSongs tracks
+    return
+  return
     
 snd.renderSongs = (data)->
   for data_item in data
@@ -155,6 +165,7 @@ snd.timeoutfunc = ->
   , 1000
 
 snd.setHandlersForNewMusicItem = (item)->
+  song_id = item.attr("data-id")
   item.find(".play_me").on 'click', ->
     if snd.nowPlaying.element
       snd.changeButtonToPlay snd.nowPlaying.element
@@ -186,10 +197,28 @@ snd.setHandlersForNewMusicItem = (item)->
           snd.nowPlaying.element = null
     return
 
+  item.find(".playlist_me").on 'click',->
+    $("#playlists_popup").show()
+    ul = $("#playlists_popup ul")
+    for data_item in snd.my_playlists.list
+      if data_item.active is true
+        $new_item = $(snd.playlist_popup_template.render data_item)
+        snd.setHandlersPlaylistPopupItem $new_item, song_id
+        ul.append $new_item
+
+
+  return
+
+snd.setHandlersPlaylistPopupItem = (element, song_id)->
+  element.find(".add_here").on 'click', ->
+    my_playlist_id = parseInt $(this).attr("data-id"), 10
+    my_song_id     = song_id
+    snd.my_playlists.list[my_playlist_id].add_song snd.current_songs[my_song_id]
+
   return
 
 snd.printExistingPlaylists = ->
-  for index, playlist of snd.my_playlists.playlists_list
+  for index, playlist of snd.my_playlists.list
     if playlist.active is true
       $new_item = $(snd.playlist_item_template.render playlist)
       snd.setHandlersForExistingPlaylistItem $new_item
@@ -241,6 +270,7 @@ $.domReady ->
     $new_item = $(snd.playlist_new_template.render {button_text: "Create It"} )
     snd.setHandlersForNewPlaylistItem $new_item
     $("#playlists_list ol").prepend $new_item
+
 
   snd.initialize_soundcloud()
   snd.getTracks()
