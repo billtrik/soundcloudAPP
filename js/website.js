@@ -383,8 +383,10 @@
       snd.setHandlersForNewPlaylistItem($new_item);
       return $("#playlists_list > ul").prepend($new_item);
     });
-    $("#close_me").click(function() {
-      return $("#playlists_popup").hide();
+    $("#close_me").click(function(e) {
+      e.stop();
+      $("#playlists_popup").hide();
+      return false;
     });
     snd.initialize_soundcloud();
     snd.getTracks();

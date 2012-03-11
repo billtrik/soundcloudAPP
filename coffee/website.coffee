@@ -340,8 +340,10 @@ $.domReady ->
     snd.setHandlersForNewPlaylistItem $new_item
     $("#playlists_list > ul").prepend $new_item
 
-  $("#close_me").click ->
+  $("#close_me").click (e)->
+    e.stop()
     $("#playlists_popup").hide()
+    return false
 
   snd.initialize_soundcloud()
   snd.getTracks()
