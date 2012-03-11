@@ -128,7 +128,8 @@ snd.setHandlersForExistingPlaylistItem = (element)->
     target_ul = $("#active_playlist_list ul")
     target_ul.empty()
     for index, song of my_playlist.songs_list
-      song.duration = secondsToTime song.duration
+      # console.log song.duration
+      # song.duration = secondsToTime parseInt(song.duration, 10)
       # data_item.artwork_url = data_item.artwork_url || "#"
       $new_item = $(snd.song_item_template.render song)
       snd.setHandlersForNewMusicItem $new_item

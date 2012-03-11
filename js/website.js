@@ -141,7 +141,6 @@
       _ref = my_playlist.songs_list;
       for (index in _ref) {
         song = _ref[index];
-        song.duration = secondsToTime(song.duration);
         $new_item = $(snd.song_item_template.render(song));
         snd.setHandlersForNewMusicItem($new_item);
         target_ul.append($new_item);
