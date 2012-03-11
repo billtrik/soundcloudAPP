@@ -198,7 +198,7 @@ snd.setHandlersForNewMusicItem = (item)->
     return
 
   item.find(".playlist_me").on 'click',->
-    $("#playlists_popup").show()
+    $("#playlists_popup").show("block")
     ul = $("#playlists_popup ul")
     for data_item in snd.my_playlists.list
       if data_item.active is true
@@ -214,6 +214,7 @@ snd.setHandlersPlaylistPopupItem = (element, song_id)->
     my_playlist_id = parseInt $(this).attr("data-id"), 10
     my_song_id     = song_id
     snd.my_playlists.list[my_playlist_id].add_song snd.current_songs[my_song_id]
+    $("#playlists_popup").hide()
 
   return
 

@@ -28,6 +28,7 @@
         params.id         = my_id
         params.active     = true
         params.songs_list = params.songs_list || []
+        params.db_prefix  = @db_prefix
         new_playlist      = new Playlist params
 
         @playlists_ids.push my_id
@@ -60,16 +61,16 @@
       @title       = params.title
       @description = params.description
       @active      = params.active
-      @songs_list  = []
+      @songs_list  = {}
       params.songs_list = params.songs_list || []
       for item in params.songs_list
-        @songs_list.push new Song(item)
+        @songs_list[item.id] = new Song(item)
 
       return this
 
     Playlist:: =
       add_song: (song)->
-        @songs_list.push new Song(song)
+        @songs_list[song.id] = new Song(song)
         db.set @db_prefix + "playlist_" + @id, @
         return 
 

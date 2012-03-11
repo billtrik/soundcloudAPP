@@ -229,7 +229,7 @@
     });
     item.find(".playlist_me").on('click', function() {
       var $new_item, data_item, ul, _i, _len, _ref, _results;
-      $("#playlists_popup").show();
+      $("#playlists_popup").show("block");
       ul = $("#playlists_popup ul");
       _ref = snd.my_playlists.list;
       _results = [];
@@ -252,7 +252,8 @@
       var my_playlist_id, my_song_id;
       my_playlist_id = parseInt($(this).attr("data-id"), 10);
       my_song_id = song_id;
-      return snd.my_playlists.list[my_playlist_id].add_song(snd.current_songs[my_song_id]);
+      snd.my_playlists.list[my_playlist_id].add_song(snd.current_songs[my_song_id]);
+      return $("#playlists_popup").hide();
     });
   };
 

@@ -34,6 +34,7 @@
           params.id = my_id;
           params.active = true;
           params.songs_list = params.songs_list || [];
+          params.db_prefix = this.db_prefix;
           new_playlist = new Playlist(params);
           this.playlists_ids.push(my_id);
           db.set(this.db_prefix + "playlist_ids", this.playlists_ids);
@@ -64,18 +65,18 @@
         this.title = params.title;
         this.description = params.description;
         this.active = params.active;
-        this.songs_list = [];
+        this.songs_list = {};
         params.songs_list = params.songs_list || [];
         _ref = params.songs_list;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           item = _ref[_i];
-          this.songs_list.push(new Song(item));
+          this.songs_list[item.id] = new Song(item);
         }
         return this;
       };
       Playlist.prototype = {
         add_song: function(song) {
-          this.songs_list.push(new Song(song));
+          this.songs_list[song.id] = new Song(song);
           db.set(this.db_prefix + "playlist_" + this.id, this);
         },
         remove_song: function(song) {}
