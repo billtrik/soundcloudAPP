@@ -26,6 +26,18 @@ snd.playlist_song_item_template = snd.hogan.compile '
     </div>
   </li>'
 
+snd.song_in_playlist = snd.hogan.compile '
+  <li class="song_item clearfix" data-id="{{id}}">
+    <div class="image_div">
+      <img src="{{artwork_url}}" />
+    </div>
+    <div class="details">
+      <h5>{{title}}</h5>
+      <p class="current_time">00:00</p><span>/</span>
+      <p class="duration">{{duration}}</p>
+    </div>
+  </li>'
+
 snd.song_item_template = snd.hogan.compile '
   <li class="song_item clearfix" data-id="{{id}}">
     <div class="image_div">
@@ -128,11 +140,8 @@ snd.setHandlersForExistingPlaylistItem = (element)->
     target_ul = $("#active_playlist_list ul")
     target_ul.empty()
     for index, song of my_playlist.songs_list
-      # console.log song.duration
-      # song.duration = secondsToTime parseInt(song.duration, 10)
-      # data_item.artwork_url = data_item.artwork_url || "#"
-      $new_item = $(snd.song_item_template.render song)
-      snd.setHandlersForNewMusicItem $new_item
+      $new_item = $(snd.song_in_playlist.render song)
+      # snd.setHandlersForPLaylistItem $new_item
       target_ul.append $new_item
 
 
@@ -140,6 +149,7 @@ snd.setHandlersForExistingPlaylistItem = (element)->
     $(".navbar .nav .active").removeClass("active")
     $("#active_playlist_list").addClass("active")
     $("#active_playlist_button").parent().addClass("active")
+    $("#active_button_play").click()
 
     return false;
 
@@ -211,12 +221,14 @@ snd.renderSongs = (data)->
     $("#songs_list ul").append $new_item
   
 snd.changeButtonToStop = (element)->
+  return if element is undefined
   element.removeClass("btn-success")
   element.addClass("btn-danger")
   element.html("Stop")
   return
 
 snd.changeButtonToPlay = (element)->
+  return if element is undefined
   element.parents("li").find(".current_time").html "00:00"
   element.removeClass("btn-danger")
   element.addClass("btn-success")
@@ -225,20 +237,126 @@ snd.changeButtonToPlay = (element)->
 
 snd.timeoutfunc = ->
   snd.timeoutVar = setTimeout ->
-    if snd.nowPlaying.element
+    if snd.nowPlaying.li
       current_time = secondsToTime snd.nowPlaying.obj.position
-      snd.nowPlaying.element.parents("li").find(".current_time").html current_time
+      snd.nowPlaying.li.find(".current_time").html current_time
       snd.timeoutfunc()
   , 1000
+
+snd.playItemInPlaylist = (params)->
+  SC.whenStreamingReady ->
+    soundObj           = SC.stream(params.id)
+    snd.nowPlaying.obj = soundObj
+    snd.nowPlaying.li  = params.li
+    soundObj.play
+      onplay: ->
+        clearTimeout snd.timeoutVar
+        snd.timeoutfunc()
+      onpause:->
+        console.log "onpause"
+      onstop:->
+        console.log "onstop"
+        clearTimeout snd.timeoutVar
+      onerror: ->
+        console.log "error"
+      onfinish: ->
+        snd.nowPlaying.li.find(".current_time").html "00:00"
+        params.li.removeClass("nowplaying")
+        new_element = snd.nowPlaying.li.next()
+        if new_element.length > 0
+          new_element.addClass("nowplaying")
+          snd.playItemInPlaylist
+            id: new_element.attr("data-id")
+            li: new_element
+        else
+          snd.nowPlaying.obj = null
+          snd.nowPlaying.li  = null
+    return
+  return
+
+snd.setHandlersForActivePlaylist = ()->
+  $("#active_button_play").on 'click', ->
+    active_song = $("#active_playlist_list .song_item.nowplaying")
+    return false if active_song.length is 1 and snd.nowPlaying.li
+    ##STOP OTHERS THAT ARE PLAYING
+    if snd.nowPlaying.li
+      if snd.nowPlaying.button and snd.nowPlaying.button.length > 0
+        snd.changeButtonToPlay snd.nowPlaying.button
+      snd.nowPlaying.obj.stop()
+
+    if active_song.length is 0
+      active_song = $("#active_playlist_list .song_item").first()
+    return false if active_song.length is 0
+    active_song.addClass("nowplaying")
+
+    my_id = active_song.attr("data-id")
+    snd.playItemInPlaylist
+      id: my_id
+      li: active_song
+
+    return
+
+  $("#active_controls .prevnext").on 'click', (e)->
+    e.preventDefault()
+    ## GET THE ITEM TO PLAY
+    my_id = $(this).attr("id")
+    active_song = $("#active_playlist_list .song_item.nowplaying")
+
+    if active_song.length is 0
+      active_song = $("#active_playlist_list .song_item").first()
+      active_song.addClass("nowplaying")
+    return false if active_song.length is 0
+
+    if my_id is "active_button_prev" 
+      return false if active_song.previous().length is 0
+    else
+      return false if active_song.next().length is 0
+
+    active_song.find(".current_time").html "00:00"
+    active_song.removeClass("nowplaying")
+    if my_id is "active_button_prev" 
+      active_song = active_song.previous()
+    else
+      active_song = active_song.next()
+    active_song.addClass("nowplaying")
+
+    if snd.nowPlaying.li
+      if snd.nowPlaying.button and snd.nowPlaying.button.length > 0
+        snd.changeButtonToPlay snd.nowPlaying.button
+      snd.nowPlaying.obj.stop()
+
+      my_id = active_song.attr("data-id")
+      snd.playItemInPlaylist
+        id: my_id
+        li: active_song
+
+  $("#active_button_stop").on 'click', ->
+    active_song = $("#active_playlist_list .song_item.nowplaying")
+    return false if active_song.length is 0
+
+    if snd.nowPlaying.li
+      if snd.nowPlaying.button and snd.nowPlaying.button.length > 0
+        snd.changeButtonToPlay snd.nowPlaying.button
+      snd.nowPlaying.obj.stop()
+    
+    active_song.find(".current_time").html "00:00"
+    active_song.removeClass("nowplaying")
+    snd.nowPlaying.obj = null
+    snd.nowPlaying.li = null
+    snd.nowPlaying.obj = null
+
+  return
 
 snd.setHandlersForNewMusicItem = (item)->
   song_id = item.attr("data-id")
   item.find(".play_me").on 'click', ->
-    if snd.nowPlaying.element
-      snd.changeButtonToPlay snd.nowPlaying.element
+    if snd.nowPlaying.li
+      snd.changeButtonToPlay snd.nowPlaying.button
       snd.nowPlaying.obj.stop()
-      if snd.nowPlaying.element[0] is this
-        snd.nowPlaying.element = null
+      if snd.nowPlaying.button and snd.nowPlaying.button[0] is this
+        snd.nowPlaying.li = null
+        snd.nowPlaying.button = null
+        snd.nowPlaying.obj = null
         return true
 
     me    = $(this)
@@ -247,7 +365,8 @@ snd.setHandlersForNewMusicItem = (item)->
     SC.whenStreamingReady ->
       soundObj               = SC.stream(my_id)
       snd.nowPlaying.obj     = soundObj
-      snd.nowPlaying.element = me
+      snd.nowPlaying.li      = me.parents("li")
+      snd.nowPlaying.button  = me
       soundObj.play
         onplay: ->
           # console.log "onplay"
@@ -257,11 +376,13 @@ snd.setHandlersForNewMusicItem = (item)->
         onstop:->
           # console.log "onstop"
           clearTimeout snd.timeoutVar
-          snd.changeButtonToPlay snd.nowPlaying.element
+          snd.changeButtonToPlay snd.nowPlaying.button
         onfinish: ->
-          snd.changeButtonToPlay snd.nowPlaying.element
-          snd.nowPlaying.element.parents("li").find(".current_time").html "00:00"
-          snd.nowPlaying.element = null
+          snd.changeButtonToPlay snd.nowPlaying.button
+          snd.nowPlaying.li.find(".current_time").html "00:00"
+          snd.nowPlaying.li = null
+          snd.nowPlaying.button = null
+          snd.nowPlaying.obj = null
     return
 
   item.find(".playlist_me").on 'click',->
@@ -346,8 +467,11 @@ $.domReady ->
     return false
 
   snd.initialize_soundcloud()
+  SC.whenStreamingReady ->
+    return
   snd.getTracks()
   snd.printExistingPlaylists()
+  snd.setHandlersForActivePlaylist()
 
 
 

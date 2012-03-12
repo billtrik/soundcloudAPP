@@ -105,6 +105,8 @@
   border: 1px solid #888;
   border-radius: 4px;
   padding: 10px; }
+  .song_item.nowplaying {
+    border: 4px solid #CEE319; }
   .song_item .image_div {
     width: 100px;
     height: 100px;

@@ -40,6 +40,18 @@
     </div>\
   </li>');
 
+  snd.song_in_playlist = snd.hogan.compile('\
+  <li class="song_item clearfix" data-id="{{id}}">\
+    <div class="image_div">\
+      <img src="{{artwork_url}}" />\
+    </div>\
+    <div class="details">\
+      <h5>{{title}}</h5>\
+      <p class="current_time">00:00</p><span>/</span>\
+      <p class="duration">{{duration}}</p>\
+    </div>\
+  </li>');
+
   snd.song_item_template = snd.hogan.compile('\
   <li class="song_item clearfix" data-id="{{id}}">\
     <div class="image_div">\
@@ -141,14 +153,14 @@
       _ref = my_playlist.songs_list;
       for (index in _ref) {
         song = _ref[index];
-        $new_item = $(snd.song_item_template.render(song));
-        snd.setHandlersForNewMusicItem($new_item);
+        $new_item = $(snd.song_in_playlist.render(song));
         target_ul.append($new_item);
       }
       $(".span12 .active").removeClass("active");
       $(".navbar .nav .active").removeClass("active");
       $("#active_playlist_list").addClass("active");
       $("#active_playlist_button").parent().addClass("active");
+      $("#active_button_play").click();
       return false;
     });
     return show_songs_button.on('click', function(e) {
@@ -234,12 +246,14 @@
   };
 
   snd.changeButtonToStop = function(element) {
+    if (element === void 0) return;
     element.removeClass("btn-success");
     element.addClass("btn-danger");
     element.html("Stop");
   };
 
   snd.changeButtonToPlay = function(element) {
+    if (element === void 0) return;
     element.parents("li").find(".current_time").html("00:00");
     element.removeClass("btn-danger");
     element.addClass("btn-success");
@@ -249,12 +263,128 @@
   snd.timeoutfunc = function() {
     return snd.timeoutVar = setTimeout(function() {
       var current_time;
-      if (snd.nowPlaying.element) {
+      if (snd.nowPlaying.li) {
         current_time = secondsToTime(snd.nowPlaying.obj.position);
-        snd.nowPlaying.element.parents("li").find(".current_time").html(current_time);
+        snd.nowPlaying.li.find(".current_time").html(current_time);
         return snd.timeoutfunc();
       }
     }, 1000);
+  };
+
+  snd.playItemInPlaylist = function(params) {
+    SC.whenStreamingReady(function() {
+      var soundObj;
+      soundObj = SC.stream(params.id);
+      snd.nowPlaying.obj = soundObj;
+      snd.nowPlaying.li = params.li;
+      soundObj.play({
+        onplay: function() {
+          clearTimeout(snd.timeoutVar);
+          return snd.timeoutfunc();
+        },
+        onpause: function() {
+          return console.log("onpause");
+        },
+        onstop: function() {
+          console.log("onstop");
+          return clearTimeout(snd.timeoutVar);
+        },
+        onerror: function() {
+          return console.log("error");
+        },
+        onfinish: function() {
+          var new_element;
+          snd.nowPlaying.li.find(".current_time").html("00:00");
+          params.li.removeClass("nowplaying");
+          new_element = snd.nowPlaying.li.next();
+          if (new_element.length > 0) {
+            new_element.addClass("nowplaying");
+            return snd.playItemInPlaylist({
+              id: new_element.attr("data-id"),
+              li: new_element
+            });
+          } else {
+            snd.nowPlaying.obj = null;
+            return snd.nowPlaying.li = null;
+          }
+        }
+      });
+    });
+  };
+
+  snd.setHandlersForActivePlaylist = function() {
+    $("#active_button_play").on('click', function() {
+      var active_song, my_id;
+      active_song = $("#active_playlist_list .song_item.nowplaying");
+      if (active_song.length === 1 && snd.nowPlaying.li) return false;
+      if (snd.nowPlaying.li) {
+        if (snd.nowPlaying.button && snd.nowPlaying.button.length > 0) {
+          snd.changeButtonToPlay(snd.nowPlaying.button);
+        }
+        snd.nowPlaying.obj.stop();
+      }
+      if (active_song.length === 0) {
+        active_song = $("#active_playlist_list .song_item").first();
+      }
+      if (active_song.length === 0) return false;
+      active_song.addClass("nowplaying");
+      my_id = active_song.attr("data-id");
+      snd.playItemInPlaylist({
+        id: my_id,
+        li: active_song
+      });
+    });
+    $("#active_controls .prevnext").on('click', function(e) {
+      var active_song, my_id;
+      e.preventDefault();
+      my_id = $(this).attr("id");
+      active_song = $("#active_playlist_list .song_item.nowplaying");
+      if (active_song.length === 0) {
+        active_song = $("#active_playlist_list .song_item").first();
+        active_song.addClass("nowplaying");
+      }
+      if (active_song.length === 0) return false;
+      if (my_id === "active_button_prev") {
+        if (active_song.previous().length === 0) return false;
+      } else {
+        if (active_song.next().length === 0) return false;
+      }
+      active_song.find(".current_time").html("00:00");
+      active_song.removeClass("nowplaying");
+      if (my_id === "active_button_prev") {
+        active_song = active_song.previous();
+      } else {
+        active_song = active_song.next();
+      }
+      active_song.addClass("nowplaying");
+      if (snd.nowPlaying.li) {
+        if (snd.nowPlaying.button && snd.nowPlaying.button.length > 0) {
+          snd.changeButtonToPlay(snd.nowPlaying.button);
+        }
+        snd.nowPlaying.obj.stop();
+        my_id = active_song.attr("data-id");
+        return snd.playItemInPlaylist({
+          id: my_id,
+          li: active_song
+        });
+      }
+    });
+    $("#active_button_stop").on('click', function() {
+      var active_song;
+      active_song = $("#active_playlist_list .song_item.nowplaying");
+      if (active_song.length === 0) return false;
+      if (snd.nowPlaying.li) {
+        if (snd.nowPlaying.button && snd.nowPlaying.button.length > 0) {
+          snd.changeButtonToPlay(snd.nowPlaying.button);
+        }
+        snd.nowPlaying.obj.stop();
+      }
+      active_song.find(".current_time").html("00:00");
+      active_song.removeClass("nowplaying");
+      snd.nowPlaying.obj = null;
+      snd.nowPlaying.li = null;
+      return snd.nowPlaying.obj = null;
+    });
   };
 
   snd.setHandlersForNewMusicItem = function(item) {
@@ -262,11 +392,13 @@
     song_id = item.attr("data-id");
     item.find(".play_me").on('click', function() {
       var me, my_id;
-      if (snd.nowPlaying.element) {
-        snd.changeButtonToPlay(snd.nowPlaying.element);
+      if (snd.nowPlaying.li) {
+        snd.changeButtonToPlay(snd.nowPlaying.button);
         snd.nowPlaying.obj.stop();
-        if (snd.nowPlaying.element[0] === this) {
-          snd.nowPlaying.element = null;
+        if (snd.nowPlaying.button && snd.nowPlaying.button[0] === this) {
+          snd.nowPlaying.li = null;
+          snd.nowPlaying.button = null;
+          snd.nowPlaying.obj = null;
           return true;
         }
       }
@@ -277,7 +409,8 @@
         var soundObj;
         soundObj = SC.stream(my_id);
         snd.nowPlaying.obj = soundObj;
-        snd.nowPlaying.element = me;
+        snd.nowPlaying.li = me.parents("li");
+        snd.nowPlaying.button = me;
         return soundObj.play({
           onplay: function() {
             return snd.timeoutfunc();
@@ -285,12 +418,14 @@
           onpause: function() {},
           onstop: function() {
             clearTimeout(snd.timeoutVar);
-            return snd.changeButtonToPlay(snd.nowPlaying.element);
+            return snd.changeButtonToPlay(snd.nowPlaying.button);
           },
           onfinish: function() {
-            snd.changeButtonToPlay(snd.nowPlaying.element);
-            snd.nowPlaying.element.parents("li").find(".current_time").html("00:00");
-            return snd.nowPlaying.element = null;
+            snd.changeButtonToPlay(snd.nowPlaying.button);
+            snd.nowPlaying.li.find(".current_time").html("00:00");
+            snd.nowPlaying.li = null;
+            snd.nowPlaying.button = null;
+            return snd.nowPlaying.obj = null;
           }
         });
       });
@@ -389,8 +524,10 @@
       return false;
     });
     snd.initialize_soundcloud();
+    SC.whenStreamingReady(function() {});
     snd.getTracks();
-    return snd.printExistingPlaylists();
+    snd.printExistingPlaylists();
+    return snd.setHandlersForActivePlaylist();
   });
 
   secondsToTime = function(secs) {
