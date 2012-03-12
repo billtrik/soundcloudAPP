@@ -10,15 +10,17 @@
 
 	<meta name="viewport" content="width=device-width">
 
-	<link rel="stylesheet" href="css/bootstrap.css">
-	<style>
-	body {
-	  padding-top: 60px;
-    padding-bottom: 40px;
-  }
+  <link rel="stylesheet" href="css/bootstrap.min.css">
+  <style>
+    body {
+      padding-top: 60px;
+      padding-bottom: 40px;
+    }
   </style>
   <link rel="stylesheet" href="css/bootstrap-responsive.min.css">
   <link rel="stylesheet" href="css/website.css">
+  
+  <script data-main="js/main" src="js/require.js"></script>
 </head>
 
 <body>
@@ -27,10 +29,10 @@
       <div class="container">
         <p class="brand" >SoundCloudAPP</p>
         <ul class="nav">
-          <li class="">
+          <li class="active">
             <a id="browse_music_button" data-target="songs_list" href="#">Browse Music</a>
           </li>
-          <li class="active">
+          <li class="">
             <a id="playlist_button" data-target="playlists_list" href="#">Playlists</a>
           </li>
           <li class="">
@@ -62,12 +64,13 @@
           <ul class="clearfix"></ul>
         </div>
 
-        <div id="songs_list" class="content_div well">
+        <div id="songs_list" class="content_div active well">
           <h2>Browse Music</h2>
           <ul class="clearfix"></ul>
+          <img src="img/loader.gif" alt="loading">
         </div>
 
-        <div id="playlists_list" class="content_div active well">
+        <div id="playlists_list" class="content_div  well">
           <h2>Playlists</h2>
           <button id="create_playlist_button" class="btn btn-success">New Playlist</button>
           <ul class="clearfix"></ul>
@@ -82,34 +85,5 @@
     <a href="#" class="btn" id="close_me">X</a>
     <ul></ul>
   </div>
-    
-  
-
-
-
-  <script src="js/ender.min.js"></script>
-  <script src="js/storage.js"></script>
-  <script src="js/playlist.js"></script>
-  <script src="http://connect.soundcloud.com/sdk.js"></script>
-  <script src="http://twitter.github.com/hogan.js/builds/1.0.5/hogan-1.0.5.js"></script>
-  <script src="js/website.js"></script>
 </body>
 </html>
-
-        <!--
-        <div class="well">
-          <div id="notloggedin">
-            <a href="#" class="big button" id="connect">
-              <img src="http://connect.soundcloud.com/2/btn-connect-s.png" alt="">
-            </a>
-          </div>
-          <div id="loggedin">
-            <p>
-            Logged in as: <span id="username"></span>
-            </p>
-            <a href="#" class="big button" id="connect">
-              <img src="http://connect.soundcloud.com/2/btn-disconnect-s.png" alt="">
-            </a>
-          </div>
-        </div>
-        -->

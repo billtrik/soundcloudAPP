@@ -1,14 +1,15 @@
-snd              = window.SOUNDTEST = window.SOUNDTEST || {}
-snd.client_id    = '120a55b8b9d07b69a72faa9f4874f36d'
-snd.url          = 'http://api.soundcloud.com/'
-snd.redirect_uri = "http://soundcloud.billtrik.gr/callback.html"
-snd.hogan        = Hogan
-snd.timeoutVar   = null
-snd.db           = snd.db || null
-snd.db_prefix    = "SND_app_"
-snd.my_playlists = snd.Playlists(snd.db_prefix)
+snd               = window.SOUNDTEST = window.SOUNDTEST || {}
+snd.client_id     = '120a55b8b9d07b69a72faa9f4874f36d'
+snd.url           = 'http://api.soundcloud.com/'
+snd.redirect_uri  = "http://soundcloud.billtrik.gr/callback.html"
+snd.hogan         = Hogan
+snd.timeoutVar    = null
+snd.db            = snd.db || null
+snd.db_prefix     = "SND_app_"
+snd.my_playlists  = snd.Playlists(snd.db_prefix)
 snd.current_songs = {}
-snd.nowPlaying   =
+# snd.history       = 
+snd.nowPlaying    =
   obj     : null
   element : null
 
@@ -206,9 +207,11 @@ snd.initialize_soundcloud = ->
       
 snd.getTracks = ->
   SC.get "/tracks", {limit: 12}, (tracks)->
+
     for track in tracks
       snd.current_songs[track.id] = track
     snd.renderSongs tracks
+    $("#songs_list img").hide()
     return
   return
     
@@ -338,7 +341,7 @@ snd.setHandlersForActivePlaylist = ()->
       if snd.nowPlaying.button and snd.nowPlaying.button.length > 0
         snd.changeButtonToPlay snd.nowPlaying.button
       snd.nowPlaying.obj.stop()
-    
+
     active_song.find(".current_time").html "00:00"
     active_song.removeClass("nowplaying")
     snd.nowPlaying.obj = null
