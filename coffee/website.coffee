@@ -1,3 +1,7 @@
+###                                    ###
+### APP NAMESPACING AND INITIAL VALUES ###
+###                                    ###
+
 snd               = window.SOUNDTEST = window.SOUNDTEST || {}
 snd.client_id     = '120a55b8b9d07b69a72faa9f4874f36d'
 snd.url           = 'http://api.soundcloud.com/'
@@ -8,10 +12,14 @@ snd.db            = snd.db || null
 snd.db_prefix     = "SND_app_"
 snd.my_playlists  = snd.Playlists(snd.db_prefix)
 snd.current_songs = {}
-# snd.history       = 
 snd.nowPlaying    =
   obj     : null
-  element : null
+  li      : null
+  button  : null
+
+###                                  ###
+### HOGAN TEMPLATES FOR DATA MAPPING ###
+###                                  ###
 
 snd.playlist_song_item_template = snd.hogan.compile '
   <li class="song_item clearfix" data-id="{{id}}">
@@ -96,115 +104,15 @@ snd.playlist_popup_template = snd.hogan.compile '
     <button class="btn btn-primary add_here" data-id="{{id}}">{{title}}</button>
   </li>'
 
-snd.setHandlersForExistingPlaylistItem = (element)->
-  edit_button       = element.find(".edit")
-  delete_button     = element.find(".delete")
-  show_songs_button = element.find(".show_songs")
-  play_all_buttons  = element.find(".play_all")
-  my_id = element.attr("data-id")
-  my_playlist = snd.my_playlists.list[my_id]
-  my_songs_ul = element.find ".songs_list ul"
 
-  delete_button.on 'click', (e)->
-    e.stop()
-    
-    my_li = $(this).parents("li")
-    my_data_id = parseInt my_li.attr("data-id"), 10
-    snd.my_playlists.remove my_data_id
-    my_li.remove()
-    return false
-
-  edit_button.on 'click', (e)->
-    e.stop()
-    
-    my_li = $(this).parents("li")
-    my_data_id = parseInt my_li.attr("data-id"), 10
-    playlist = snd.my_playlists.get my_data_id
-    
-    playlist.button_text = "Update It"
-    $new_item = $(snd.playlist_new_template.render playlist)
-    delete playlist.button_text
-    snd.setHandlersForUpdatingPlaylistItem $new_item, playlist
-
-    if (previous = my_li.previous()).length is 0
-      $("#playlists_list > ul").prepend $new_item
-    else
-      previous.after $new_item
-
-    my_li.remove()
-    
-
-    return false
-
-  play_all_buttons.on 'click', (e)->
-    e.stop()
-    target_ul = $("#active_playlist_list ul")
-    target_ul.empty()
-    for index, song of my_playlist.songs_list
-      $new_item = $(snd.song_in_playlist.render song)
-      # snd.setHandlersForPLaylistItem $new_item
-      target_ul.append $new_item
-
-
-    $(".span12 .active").removeClass("active")
-    $(".navbar .nav .active").removeClass("active")
-    $("#active_playlist_list").addClass("active")
-    $("#active_playlist_button").parent().addClass("active")
-    $("#active_button_play").click()
-
-    return false;
-
-  show_songs_button.on 'click', (e)->
-    e.stop()
-    
-    if element.find(".songs_list").hasClass("active") is false
-      my_songs_ul.empty()
-      for index, song of my_playlist.songs_list
-        $new_item = $(snd.playlist_song_item_template.render song)
-        
-        $new_item.find(".remove_me").on 'click', (e)->
-          e.stop()
-          my_song_id = $(this).attr("data-id")
-          my_playlist_id = $(this).parents(".playlist_item").attr("data-id")
-          snd.my_playlists.list[my_playlist_id].remove_song my_song_id
-          $(this).parents(".song_item").remove()
-          return false
-
-        snd.setHandlersForExistingPlaylistItem $new_item
-        my_songs_ul.append $new_item
-
-    element.find(".songs_list").toggleClass("active")
-    return false;
-
-snd.setHandlersForUpdatingPlaylistItem = (element, playlist)->
-  create_button = element.find(".create")
-  create_button.on 'click', (e)->
-    e.stop()
-    
-    my_li                = $(this).parents("li")
-    playlist.title       = my_li.find(".title").val()
-    playlist.description = my_li.find(".desc").val()
-
-    snd.my_playlists.update playlist
-
-    $new_item = $(snd.playlist_item_template.render playlist)
-    snd.setHandlersForExistingPlaylistItem $new_item
-
-    if (previous = my_li.previous()).length is 0
-      $("#playlists_list > ul").prepend $new_item
-    else
-      previous.after $new_item
-
-    my_li.remove()
-    
-    return false;
-
+## INITIATE THE SOUNDCLOUD SDK
 snd.initialize_soundcloud = ->
   SC.initialize
     client_id: snd.client_id
     redirect_uri: snd.redirect_uri
   return
-      
+
+## GET THE 12 LATEST TRACKS AND PRINT THEM     
 snd.getTracks = ->
   SC.get "/tracks", {limit: 12}, (tracks)->
 
@@ -214,7 +122,8 @@ snd.getTracks = ->
     $("#songs_list img").hide()
     return
   return
-    
+
+## CREATE HTML AND SET HANDLERS FOR LATEST SONGS    
 snd.renderSongs = (data)->
   for data_item in data
     data_item.duration = secondsToTime data_item.duration
@@ -223,6 +132,7 @@ snd.renderSongs = (data)->
     snd.setHandlersForNewMusicItem $new_item
     $("#songs_list ul").append $new_item
   
+## CREATE SONG "PLAY" BUTTON TO "STOP"
 snd.changeButtonToStop = (element)->
   return if element is undefined
   element.removeClass("btn-success")
@@ -230,6 +140,7 @@ snd.changeButtonToStop = (element)->
   element.html("Stop")
   return
 
+## CREATE SONG "STOP" BUTTON TO "PLAY"
 snd.changeButtonToPlay = (element)->
   return if element is undefined
   element.parents("li").find(".current_time").html "00:00"
@@ -238,6 +149,16 @@ snd.changeButtonToPlay = (element)->
   element.html("Play")
   return
 
+## CREATE HTML AND SET HANDLERS FOR EXISTING PLAYLISTS
+snd.printExistingPlaylists = ->
+  for index, playlist of snd.my_playlists.list
+    if playlist.active is true
+      $new_item = $(snd.playlist_item_template.render playlist)
+      snd.setHandlersForExistingPlaylistItem $new_item
+      $("#playlists_list > ul").prepend $new_item
+  return
+
+## FUNCTION TO SHOW THE SECONDS OF THE PLAYING SONG
 snd.timeoutfunc = ->
   snd.timeoutVar = setTimeout ->
     if snd.nowPlaying.li
@@ -246,6 +167,12 @@ snd.timeoutfunc = ->
       snd.timeoutfunc()
   , 1000
 
+
+## PLAY THE SELECTED PLAYLIST SONG AND ON FINISH PLAY THE NEXT
+## params{ 
+##   id: "THE ID OF THE OSNG TO PLAY"
+##   li: "THE LIDOM ELEMENT OF THE SONG TO PLAY"
+##}
 snd.playItemInPlaylist = (params)->
   SC.whenStreamingReady ->
     soundObj           = SC.stream(params.id)
@@ -277,6 +204,12 @@ snd.playItemInPlaylist = (params)->
     return
   return
 
+
+###                                ###
+### LIST OF HANDLERS FOR THE VIEWS ###
+###                                ###
+
+## HANDLER FOT ACTIVE PLAYLIST BUTTONS. HANDLES "PLAY", "PREV", "NEXT", "STOP"
 snd.setHandlersForActivePlaylist = ()->
   $("#active_button_play").on 'click', ->
     active_song = $("#active_playlist_list .song_item.nowplaying")
@@ -350,6 +283,8 @@ snd.setHandlersForActivePlaylist = ()->
 
   return
 
+
+## HANDLER FOR LATEST SONGS. HANDLES "PLAY SONG" AND "ADD TO PLAYLIST"
 snd.setHandlersForNewMusicItem = (item)->
   song_id = item.attr("data-id")
   item.find(".play_me").on 'click', ->
@@ -401,6 +336,7 @@ snd.setHandlersForNewMusicItem = (item)->
 
   return
 
+## HANDLER FOR THE PLAYLIST POPUP. HANDLES ADD SONG TO PLAYLIST
 snd.setHandlersPlaylistPopupItem = (element, song_id)->
   element.find(".add_here").on 'click', ->
     my_playlist_id = parseInt $(this).attr("data-id"), 10
@@ -410,14 +346,113 @@ snd.setHandlersPlaylistPopupItem = (element, song_id)->
 
   return
 
-snd.printExistingPlaylists = ->
-  for index, playlist of snd.my_playlists.list
-    if playlist.active is true
-      $new_item = $(snd.playlist_item_template.render playlist)
-      snd.setHandlersForExistingPlaylistItem $new_item
-      $("#playlists_list > ul").prepend $new_item
-  return
+## HANDLER FOR SAVED PLAYLIST ITEM. HANDLES "DELETE", "EDIT", "PLAY ALL" AND "SHOW SONGS"
+snd.setHandlersForExistingPlaylistItem = (element)->
+  edit_button       = element.find(".edit")
+  delete_button     = element.find(".delete")
+  show_songs_button = element.find(".show_songs")
+  play_all_buttons  = element.find(".play_all")
+  my_id = element.attr("data-id")
+  my_playlist = snd.my_playlists.list[my_id]
+  my_songs_ul = element.find ".songs_list ul"
 
+  delete_button.on 'click', (e)->
+    e.stop()
+    
+    my_li = $(this).parents("li")
+    my_data_id = parseInt my_li.attr("data-id"), 10
+    snd.my_playlists.remove my_data_id
+    my_li.remove()
+    return false
+
+  edit_button.on 'click', (e)->
+    e.stop()
+    
+    my_li = $(this).parents("li")
+    my_data_id = parseInt my_li.attr("data-id"), 10
+    playlist = snd.my_playlists.get my_data_id
+    
+    playlist.button_text = "Update It"
+    $new_item = $(snd.playlist_new_template.render playlist)
+    delete playlist.button_text
+    snd.setHandlersForUpdatingPlaylistItem $new_item, playlist
+
+    if (previous = my_li.previous()).length is 0
+      $("#playlists_list > ul").prepend $new_item
+    else
+      previous.after $new_item
+
+    my_li.remove()
+    
+
+    return false
+
+  play_all_buttons.on 'click', (e)->
+    e.stop()
+    target_ul = $("#active_playlist_list ul")
+    target_ul.empty()
+    for index, song of my_playlist.songs_list
+      $new_item = $(snd.song_in_playlist.render song)
+      target_ul.append $new_item
+
+
+    $(".span12 .active").removeClass("active")
+    $(".navbar .nav .active").removeClass("active")
+    $("#active_playlist_list").addClass("active")
+    $("#active_playlist_button").parent().addClass("active")
+    $("#active_button_play").click()
+
+    return false;
+
+  show_songs_button.on 'click', (e)->
+    e.stop()
+    
+    if element.find(".songs_list").hasClass("active") is false
+      my_songs_ul.empty()
+      for index, song of my_playlist.songs_list
+        $new_item = $(snd.playlist_song_item_template.render song)
+        
+        $new_item.find(".remove_me").on 'click', (e)->
+          e.stop()
+          my_song_id = $(this).attr("data-id")
+          my_playlist_id = $(this).parents(".playlist_item").attr("data-id")
+          snd.my_playlists.list[my_playlist_id].remove_song my_song_id
+          $(this).parents(".song_item").remove()
+          return false
+
+        snd.setHandlersForExistingPlaylistItem $new_item
+        my_songs_ul.append $new_item
+
+    element.find(".songs_list").toggleClass("active")
+    return false;
+
+## HANDLER FOR UPDATING PLAYLIST ITEM. HANDLES "UPDATE"
+snd.setHandlersForUpdatingPlaylistItem = (element, playlist)->
+  create_button = element.find(".create")
+  create_button.on 'click', (e)->
+    e.stop()
+    
+    my_li                = $(this).parents("li")
+    playlist.title       = my_li.find(".title").val()
+    playlist.description = my_li.find(".desc").val()
+
+    snd.my_playlists.update playlist
+
+    $new_item = $(snd.playlist_item_template.render playlist)
+    snd.setHandlersForExistingPlaylistItem $new_item
+
+    if (previous = my_li.previous()).length is 0
+      $("#playlists_list > ul").prepend $new_item
+    else
+      previous.after $new_item
+
+    my_li.remove()
+    
+    return false;
+
+###NOT DRY###
+
+## HANDLER FOR NEW PLAYLIST ITEM. HANDLES "CREATE"
 snd.setHandlersForNewPlaylistItem = (element)->
   create_button = element.find(".create")
   create_button.on 'click', (e)->
@@ -440,11 +475,13 @@ snd.setHandlersForNewPlaylistItem = (element)->
     $("#playlists_list > ul").prepend $new_item
     return false;
 
-
+##ENDER DOM READY
 $.domReady ->
+  ##MAIN MENU STUFF
   $(".navbar .btn-navbar").on 'click',->
     $(".navbar").toggleClass("active")
 
+  ## TOGGLE THE CONTAINER DIVS FROM THE MAIN MENU
   $(".navbar .nav li a").on 'click', (e)->
     e.stop();
 
@@ -459,27 +496,33 @@ $.domReady ->
     $(".navbar").removeClass("active")
     return false
 
+  ## CREATE PLAYLIST HANDLER
   $("#create_playlist_button").on 'click',->
     $new_item = $(snd.playlist_new_template.render {button_text: "Create It"} )
     snd.setHandlersForNewPlaylistItem $new_item
     $("#playlists_list > ul").prepend $new_item
 
+  ## CLOSE BUTTON FOR PLAYLIST POPUP HANDLER
   $("#close_me").click (e)->
     e.stop()
     $("#playlists_popup").hide()
     return false
 
+  ##INITIATE THE SDK
   snd.initialize_soundcloud()
+  ##GET THE SOUNDMANAGER AS SOON AS POSSIBLE
   SC.whenStreamingReady ->
     return
+  ##GET LATEST TRACKS
   snd.getTracks()
+  ##READ EXISTING PLAYLISTS FROM LOCALSTORAGE AND PRINT THEM
   snd.printExistingPlaylists()
+  ##SET HANDLERS FOR THE BUTTONS OF THE ACTIVE PLAYLIST
   snd.setHandlersForActivePlaylist()
 
+  return
 
-
-
-
+##FUNCTION TO CONVERT MILLISECONDS TO HH:MM
 secondsToTime = (secs)->
   secs = secs / 1000
   hours = Math.floor(secs / (60 * 60))

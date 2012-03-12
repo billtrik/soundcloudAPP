@@ -1,3 +1,9 @@
+/*
+*/
+/* APP NAMESPACING AND INITIAL VALUES
+*/
+/*
+*/
 var secondsToTime, snd;
 
 snd = window.SOUNDTEST = window.SOUNDTEST || {};
@@ -22,8 +28,18 @@ snd.current_songs = {};
 
 snd.nowPlaying = {
   obj: null,
-  element: null
+  li: null,
+  button: null
 };
+
+/*
+*/
+
+/* HOGAN TEMPLATES FOR DATA MAPPING
+*/
+
+/*
+*/
 
 snd.playlist_song_item_template = snd.hogan.compile('\
   <li class="song_item clearfix" data-id="{{id}}">\
@@ -108,109 +124,6 @@ snd.playlist_popup_template = snd.hogan.compile('\
     <button class="btn btn-primary add_here" data-id="{{id}}">{{title}}</button>\
   </li>');
 
-snd.setHandlersForExistingPlaylistItem = function(element) {
-  var delete_button, edit_button, my_id, my_playlist, my_songs_ul, play_all_buttons, show_songs_button;
-  edit_button = element.find(".edit");
-  delete_button = element.find(".delete");
-  show_songs_button = element.find(".show_songs");
-  play_all_buttons = element.find(".play_all");
-  my_id = element.attr("data-id");
-  my_playlist = snd.my_playlists.list[my_id];
-  my_songs_ul = element.find(".songs_list ul");
-  delete_button.on('click', function(e) {
-    var my_data_id, my_li;
-    e.stop();
-    my_li = $(this).parents("li");
-    my_data_id = parseInt(my_li.attr("data-id"), 10);
-    snd.my_playlists.remove(my_data_id);
-    my_li.remove();
-    return false;
-  });
-  edit_button.on('click', function(e) {
-    var $new_item, my_data_id, my_li, playlist, previous;
-    e.stop();
-    my_li = $(this).parents("li");
-    my_data_id = parseInt(my_li.attr("data-id"), 10);
-    playlist = snd.my_playlists.get(my_data_id);
-    playlist.button_text = "Update It";
-    $new_item = $(snd.playlist_new_template.render(playlist));
-    delete playlist.button_text;
-    snd.setHandlersForUpdatingPlaylistItem($new_item, playlist);
-    if ((previous = my_li.previous()).length === 0) {
-      $("#playlists_list > ul").prepend($new_item);
-    } else {
-      previous.after($new_item);
-    }
-    my_li.remove();
-    return false;
-  });
-  play_all_buttons.on('click', function(e) {
-    var $new_item, index, song, target_ul, _ref;
-    e.stop();
-    target_ul = $("#active_playlist_list ul");
-    target_ul.empty();
-    _ref = my_playlist.songs_list;
-    for (index in _ref) {
-      song = _ref[index];
-      $new_item = $(snd.song_in_playlist.render(song));
-      target_ul.append($new_item);
-    }
-    $(".span12 .active").removeClass("active");
-    $(".navbar .nav .active").removeClass("active");
-    $("#active_playlist_list").addClass("active");
-    $("#active_playlist_button").parent().addClass("active");
-    $("#active_button_play").click();
-    return false;
-  });
-  return show_songs_button.on('click', function(e) {
-    var $new_item, index, song, _ref;
-    e.stop();
-    if (element.find(".songs_list").hasClass("active") === false) {
-      my_songs_ul.empty();
-      _ref = my_playlist.songs_list;
-      for (index in _ref) {
-        song = _ref[index];
-        $new_item = $(snd.playlist_song_item_template.render(song));
-        $new_item.find(".remove_me").on('click', function(e) {
-          var my_playlist_id, my_song_id;
-          e.stop();
-          my_song_id = $(this).attr("data-id");
-          my_playlist_id = $(this).parents(".playlist_item").attr("data-id");
-          snd.my_playlists.list[my_playlist_id].remove_song(my_song_id);
-          $(this).parents(".song_item").remove();
-          return false;
-        });
-        snd.setHandlersForExistingPlaylistItem($new_item);
-        my_songs_ul.append($new_item);
-      }
-    }
-    element.find(".songs_list").toggleClass("active");
-    return false;
-  });
-};
-
-snd.setHandlersForUpdatingPlaylistItem = function(element, playlist) {
-  var create_button;
-  create_button = element.find(".create");
-  return create_button.on('click', function(e) {
-    var $new_item, my_li, previous;
-    e.stop();
-    my_li = $(this).parents("li");
-    playlist.title = my_li.find(".title").val();
-    playlist.description = my_li.find(".desc").val();
-    snd.my_playlists.update(playlist);
-    $new_item = $(snd.playlist_item_template.render(playlist));
-    snd.setHandlersForExistingPlaylistItem($new_item);
-    if ((previous = my_li.previous()).length === 0) {
-      $("#playlists_list > ul").prepend($new_item);
-    } else {
-      previous.after($new_item);
-    }
-    my_li.remove();
-    return false;
-  });
-};
-
 snd.initialize_soundcloud = function() {
   SC.initialize({
     client_id: snd.client_id,
@@ -258,6 +171,19 @@ snd.changeButtonToPlay = function(element) {
   element.removeClass("btn-danger");
   element.addClass("btn-success");
   element.html("Play");
+};
+
+snd.printExistingPlaylists = function() {
+  var $new_item, index, playlist, _ref;
+  _ref = snd.my_playlists.list;
+  for (index in _ref) {
+    playlist = _ref[index];
+    if (playlist.active === true) {
+      $new_item = $(snd.playlist_item_template.render(playlist));
+      snd.setHandlersForExistingPlaylistItem($new_item);
+      $("#playlists_list > ul").prepend($new_item);
+    }
+  }
 };
 
 snd.timeoutfunc = function() {
@@ -311,6 +237,15 @@ snd.playItemInPlaylist = function(params) {
     });
   });
 };
+
+/*
+*/
+
+/* LIST OF HANDLERS FOR THE VIEWS
+*/
+
+/*
+*/
 
 snd.setHandlersForActivePlaylist = function() {
   $("#active_button_play").on('click', function() {
@@ -461,18 +396,111 @@ snd.setHandlersPlaylistPopupItem = function(element, song_id) {
   });
 };
 
-snd.printExistingPlaylists = function() {
-  var $new_item, index, playlist, _ref;
-  _ref = snd.my_playlists.list;
-  for (index in _ref) {
-    playlist = _ref[index];
-    if (playlist.active === true) {
-      $new_item = $(snd.playlist_item_template.render(playlist));
-      snd.setHandlersForExistingPlaylistItem($new_item);
+snd.setHandlersForExistingPlaylistItem = function(element) {
+  var delete_button, edit_button, my_id, my_playlist, my_songs_ul, play_all_buttons, show_songs_button;
+  edit_button = element.find(".edit");
+  delete_button = element.find(".delete");
+  show_songs_button = element.find(".show_songs");
+  play_all_buttons = element.find(".play_all");
+  my_id = element.attr("data-id");
+  my_playlist = snd.my_playlists.list[my_id];
+  my_songs_ul = element.find(".songs_list ul");
+  delete_button.on('click', function(e) {
+    var my_data_id, my_li;
+    e.stop();
+    my_li = $(this).parents("li");
+    my_data_id = parseInt(my_li.attr("data-id"), 10);
+    snd.my_playlists.remove(my_data_id);
+    my_li.remove();
+    return false;
+  });
+  edit_button.on('click', function(e) {
+    var $new_item, my_data_id, my_li, playlist, previous;
+    e.stop();
+    my_li = $(this).parents("li");
+    my_data_id = parseInt(my_li.attr("data-id"), 10);
+    playlist = snd.my_playlists.get(my_data_id);
+    playlist.button_text = "Update It";
+    $new_item = $(snd.playlist_new_template.render(playlist));
+    delete playlist.button_text;
+    snd.setHandlersForUpdatingPlaylistItem($new_item, playlist);
+    if ((previous = my_li.previous()).length === 0) {
       $("#playlists_list > ul").prepend($new_item);
+    } else {
+      previous.after($new_item);
     }
-  }
+    my_li.remove();
+    return false;
+  });
+  play_all_buttons.on('click', function(e) {
+    var $new_item, index, song, target_ul, _ref;
+    e.stop();
+    target_ul = $("#active_playlist_list ul");
+    target_ul.empty();
+    _ref = my_playlist.songs_list;
+    for (index in _ref) {
+      song = _ref[index];
+      $new_item = $(snd.song_in_playlist.render(song));
+      target_ul.append($new_item);
+    }
+    $(".span12 .active").removeClass("active");
+    $(".navbar .nav .active").removeClass("active");
+    $("#active_playlist_list").addClass("active");
+    $("#active_playlist_button").parent().addClass("active");
+    $("#active_button_play").click();
+    return false;
+  });
+  return show_songs_button.on('click', function(e) {
+    var $new_item, index, song, _ref;
+    e.stop();
+    if (element.find(".songs_list").hasClass("active") === false) {
+      my_songs_ul.empty();
+      _ref = my_playlist.songs_list;
+      for (index in _ref) {
+        song = _ref[index];
+        $new_item = $(snd.playlist_song_item_template.render(song));
+        $new_item.find(".remove_me").on('click', function(e) {
+          var my_playlist_id, my_song_id;
+          e.stop();
+          my_song_id = $(this).attr("data-id");
+          my_playlist_id = $(this).parents(".playlist_item").attr("data-id");
+          snd.my_playlists.list[my_playlist_id].remove_song(my_song_id);
+          $(this).parents(".song_item").remove();
+          return false;
+        });
+        snd.setHandlersForExistingPlaylistItem($new_item);
+        my_songs_ul.append($new_item);
+      }
+    }
+    element.find(".songs_list").toggleClass("active");
+    return false;
+  });
 };
+
+snd.setHandlersForUpdatingPlaylistItem = function(element, playlist) {
+  var create_button;
+  create_button = element.find(".create");
+  return create_button.on('click', function(e) {
+    var $new_item, my_li, previous;
+    e.stop();
+    my_li = $(this).parents("li");
+    playlist.title = my_li.find(".title").val();
+    playlist.description = my_li.find(".desc").val();
+    snd.my_playlists.update(playlist);
+    $new_item = $(snd.playlist_item_template.render(playlist));
+    snd.setHandlersForExistingPlaylistItem($new_item);
+    if ((previous = my_li.previous()).length === 0) {
+      $("#playlists_list > ul").prepend($new_item);
+    } else {
+      previous.after($new_item);
+    }
+    my_li.remove();
+    return false;
+  });
+};
+
+/*NOT DRY
+*/
 
 snd.setHandlersForNewPlaylistItem = function(element) {
   var create_button;
@@ -527,7 +555,7 @@ $.domReady(function() {
   SC.whenStreamingReady(function() {});
   snd.getTracks();
   snd.printExistingPlaylists();
-  return snd.setHandlersForActivePlaylist();
+  snd.setHandlersForActivePlaylist();
 });
 
 secondsToTime = function(secs) {

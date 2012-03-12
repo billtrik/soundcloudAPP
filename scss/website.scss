@@ -88,7 +88,7 @@
     .brand{
       float: none;
       margin:0px;
-      padding: 0 0 0 20px;//10px 10px 10px 20px;
+      padding: 0 0 0 20px;
       line-height:40px;
       display:block;
     }
@@ -205,11 +205,6 @@
     button{
       display:inline-block;
     }
-
-    // .play_me{
-    //   display:inline-block;
-
-    // }
   }
   .buttons{
     clear:both;
@@ -235,8 +230,6 @@
     position: absolute;
     top: -15px;
     right: -15px;
-    // padding: 6px;
-    // width: 20px;
     background: black;
     color: white;
     margin: 0px;
@@ -255,11 +248,7 @@
     margin-bottom: 10px;
   }
   button{
-    // border:0 none;
-    // display:block;
     width:100%;
-    // background-color: green;
-    // color: black;
     height:50px;
   }
 }

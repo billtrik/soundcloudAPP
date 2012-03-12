@@ -1,3 +1,5 @@
+/* THIS IS A LOCALSTORAGE OBSTARCTION LAYER         */
+
 (function(window, document, undefined) {
   snd = window.SOUNDTEST = window.SOUNDTEST || {};
   if(snd.db){
@@ -10,7 +12,8 @@
     this.localStorage        = null;
     return this.init();
   };
-
+  
+  /* NON PERSISTANT SHIM FOR NON LOCASTORAGE BROWSERS */
   NOLocalStorageClass = function() {
     var _this = this;
     this.length = 0;

@@ -1,8 +1,18 @@
+###                                              ###
+### MODELS DECLARATION                           ### 
+### PLAYLISTS FOR THE GENERAL LIST OF PLAYLISTS  ###
+### PLAYLIST FOR A SPECIFIC PLAYLIST             ###
+### SONG FOR SONGS                               ###
+###                                              ###
+
 ((window, document)->
+  ##GET/SET MY INITIAL NAMESPACING
   snd = window.SOUNDTEST = window.SOUNDTEST || {};
+  ##DB IS REQUIRED
   db = snd.db
 
   if snd.Playlists is undefined
+    ## MUST INITIALIZE WITH A DB_PREFIX FOR LOCALSTORAGE NAMESPACING
     Playlists = (db_prefix)->
       if this instanceof Playlists is false
         return new Playlists(db_prefix)
@@ -10,19 +20,19 @@
       @db_prefix     = db_prefix
       @list          = []
       @playlists_ids = db.get @db_prefix + "playlist_ids"
+      
       if @playlists_ids isnt false
         for id in @playlists_ids
           item = db.get @db_prefix + "playlist_" + id
           item.db_prefix   = @db_prefix
+          ## CREATE NEW PLAYLIST OBJECT FROM DATA SO THAT WE CAN HAVE THEIR METHODS
           @list.push new Playlist(item)
       else
         @playlists_ids = []
       return this
 
+    ## CRUD
     Playlists:: = 
-      get: (id)->
-        return @list[id]
-
       create: (params)->
         my_id             = @list.length
         params.id         = my_id
@@ -37,12 +47,9 @@
         db.set @db_prefix + "playlist_" + my_id, new_playlist
         
         return new_playlist
-
-      remove: (id)->
-        @list[id].active = false
-        db.set @db_prefix + "playlist_" + id, @list[id]
-        return true
-
+      get: (id)->
+        return @list[id]
+      
       update: (playlist)->
         id = playlist.id
         if (item_to_update = @list[id])
@@ -50,12 +57,16 @@
           item_to_update.description = playlist.description
           db.set @db_prefix + "playlist_" + id, @list[id]
         return
+      remove: (id)->
+        @list[id].active = false
+        db.set @db_prefix + "playlist_" + id, @list[id]
+        return true
 
 
     Playlist = (params)->
       if this instanceof Playlist is false
         return new Playlist(params)
-
+      ## MUST GET THE DB_PREFIX FOR LOCALSTORAGE NAMESPACING
       @db_prefix   = params.db_prefix
       @id          = params.id
       @title       = params.title
@@ -64,6 +75,7 @@
       @songs_list  = {}
       params.songs_list = params.songs_list || {}
       for index, item of params.songs_list
+        ## CREATE NEW PLAYLIST OBJECT FROM DATA SO THAT WE CAN HAVE THEIR METHODS
         @songs_list[item.id] = new Song(item)
 
       return this
